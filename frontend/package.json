@@ -1,0 +1,32 @@
+{
+  "name": "hubidays-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.10",
+    "next": "14.1.0",
+    "next-i18next": "^15.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "sass": "^1.71.0",
+    "@hookform/resolvers": "^3.3.4",
+    "react-hook-form": "^7.50.1",
+    "zod": "^3.22.4",
+    "date-fns": "^3.3.1",
+    "react-beautiful-dnd": "^13.1.1",
+    "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.294.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.56",
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "@types/react-dom": "^18.2.19",
+    "typescript": "^5.3.3"
+  }
+}

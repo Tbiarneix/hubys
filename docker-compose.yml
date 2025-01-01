@@ -1,52 +1,38 @@
 version: '3.8'
-
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
-    ports:
-      - "3000:3000"
+  postgres:
+    image: postgres:15
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4000
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your_secret_key_here
-    depends_on:
-      - backend
-
-  backend:
-    build:
-      context: .
-      dockerfile: docker/backend/Dockerfile
+      POSTGRES_USER: ${POSTGRES_USER:-hubidays}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hubidays}
+      POSTGRES_DB: ${POSTGRES_DB:-hubidays}
     ports:
-      - "4000:4000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/hubidays
-      - JWT_SECRET=your_jwt_secret_here
-      - SMTP_HOST=
-      - SMTP_PORT=587
-      - SMTP_USER=
-      - SMTP_PASS=
-      - SMTP_FROM=
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:14-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=hubidays
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hubidays}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-hubidays}:${POSTGRES_PASSWORD:-hubidays}@postgres:5432/${POSTGRES_DB:-hubidays}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npx prisma migrate deploy && npm run dev"
 
 volumes:
   postgres_data:

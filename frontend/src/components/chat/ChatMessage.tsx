@@ -1,8 +1,8 @@
 import { FC } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Message } from '@/types/message';
-import { useAuth } from '@/hooks/use-auth';
+import { Message } from '../../types/message';
+import { useAuth } from '../../hooks/use-auth';
 
 interface ChatMessageProps {
   message: Message;
@@ -11,7 +11,7 @@ interface ChatMessageProps {
 export const ChatMessage: FC<ChatMessageProps> = ({ message }) => {
   const { user } = useAuth();
   const isOwnMessage = message.user.id === user?.id;
-
+ 
   return (
     <div
       className={`flex flex-col mb-4 ${

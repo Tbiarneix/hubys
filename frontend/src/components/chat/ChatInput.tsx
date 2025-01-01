@@ -1,7 +1,9 @@
+"use client";
+
 import { FC, useState, KeyboardEvent } from 'react';
 import { useMutation, gql } from '@apollo/client';
 import { Send } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '../ui/input';
 import { Button } from '@/components/ui/button';
 
 const SEND_MESSAGE = gql`

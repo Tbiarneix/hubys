@@ -10,8 +10,8 @@
 - [ ] Configurer les tests d'accessibilité WCAG
 
 ## Authentification et Gestion des Utilisateurs
-- [ ] Créer le système d'authentification avec JWT
-- [ ] Développer le formulaire de connexion/inscription
+- [x] Créer le système d'authentification avec JWT
+- [x] Développer le formulaire de connexion/inscription
 - [ ] Implémenter la gestion des profils utilisateurs
   - [ ] Avatar
   - [ ] Informations personnelles

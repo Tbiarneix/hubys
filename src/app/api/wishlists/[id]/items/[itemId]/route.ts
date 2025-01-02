@@ -5,10 +5,11 @@ import prisma from '@/lib/prisma';
 // DELETE /api/wishlists/[id]/items/[itemId] - Delete an item
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; itemId: string } }
+  props: { params: Promise<{ id: string; itemId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession();
-  
+
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -48,7 +48,8 @@ interface WishlistItem {
   categoryId: string | null;
 }
 
-export default function WishlistPage({ params }: { params: { id: string } }) {
+export default function WishlistPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const { data: session, status } = useSession();
   const [wishlist, setWishlist] = useState<WishList | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);

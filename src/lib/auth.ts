@@ -14,6 +14,7 @@ export function verifyToken(token: string) {
   try {
     return verify(token, JWT_SECRET) as { id: string; email: string };
   } catch (error) {
+    console.error('Error verifying token:', error);
     throw new Error('Invalid token');
   }
 }

@@ -1,36 +1,20 @@
 import { PrismaClient } from '@prisma/client';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { verifyToken } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth.config';
 
 const prisma = new PrismaClient();
 
 export type Context = {
   prisma: PrismaClient;
-  req: NextApiRequest;
-  res: NextApiResponse;
-  user?: {
-    id: string;
-    email: string;
-  };
+  session: Awaited<ReturnType<typeof getServerSession>> | null;
 };
 
-export async function createContext({ req, res }): Promise<Context> {
-  // Get the token from the Authorization header
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  
-  let user;
-  if (token) {
-    try {
-      user = await verifyToken(token);
-    } catch (error) {
-      console.error('Error verifying token:', error);
-    }
-  }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function createContext(): Promise<Context> {
+  const session = await getServerSession(authOptions);
 
   return {
     prisma,
-    req,
-    res,
-    user,
+    session,
   };
 }

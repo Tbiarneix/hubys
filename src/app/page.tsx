@@ -45,6 +45,7 @@ export default function Home() {
       // Redirection vers la page de profil
       router.push('/profile');
     } catch (err) {
+      console.error(err);
       setError('Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);

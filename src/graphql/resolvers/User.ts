@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcryptjs';
 
@@ -8,12 +9,12 @@ export const resolvers = {
     users: async () => {
       return prisma.user.findMany();
     },
-    user: async (_, { id }) => {
+    user: async (_: any, { id }: { id: string }) => {
       return prisma.user.findUnique({
         where: { id },
       });
     },
-    me: async (_, __, { user }) => {
+    me: async (_: any, __: any, { user }: { user: any }) => {
       if (!user) return null;
       return prisma.user.findUnique({
         where: { id: user.id },
@@ -21,7 +22,7 @@ export const resolvers = {
     },
   },
   Mutation: {
-    createUser: async (_, { input }) => {
+    createUser: async (_: any, { input }: { input: any }) => {
       const hashedPassword = await hash(input.password, 10);
       return prisma.user.create({
         data: {
@@ -30,13 +31,13 @@ export const resolvers = {
         },
       });
     },
-    updateUser: async (_, { id, input }) => {
+    updateUser: async (_: any, { id, input }: { id: string, input: any }) => {
       return prisma.user.update({
         where: { id },
         data: input,
       });
     },
-    deleteUser: async (_, { id }) => {
+    deleteUser: async (_: any, { id }: { id: string }) => {
       return prisma.user.delete({
         where: { id },
       });

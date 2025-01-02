@@ -2,13 +2,45 @@
 
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Pencil, X } from 'lucide-react';
+import { Pencil, X, Plus } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { CreateWishlistModal } from '@/components/wishlists/CreateWishlistModal';
+import Link from 'next/link';
+
+interface WishList {
+  id: string;
+  title: string;
+  createdAt: string;
+}
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
+  const [wishlists, setWishlists] = useState<WishList[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWishlists = async () => {
+      try {
+        const response = await fetch('/api/wishlists');
+        if (!response.ok) {
+          throw new Error('Failed to fetch wishlists');
+        }
+        const data = await response.json();
+        setWishlists(data);
+      } catch (error) {
+        console.error('Error fetching wishlists:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (session) {
+      fetchWishlists();
+    }
+  }, [session]);
 
   if (status === "loading") {
     return (
@@ -31,7 +63,7 @@ export default function ProfilePage() {
             <div>
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-black">Informations personnelles</h2>
-                <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <Dialog.Root open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
                   <Dialog.Trigger asChild>
                     <button className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                       <Pencil className="h-4 w-4 mr-2" />
@@ -72,7 +104,50 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+        
+        <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-black">Listes de souhaits</h2>
+                <button 
+                  onClick={() => setIsWishlistModalOpen(true)}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une liste
+                </button>
+              </div>
+              <div className="mt-4">
+                {isLoading ? (
+                  <p className="text-gray-500">Chargement...</p>
+                ) : wishlists.length === 0 ? (
+                  <p className="text-gray-500 italic">Pas de liste de souhait</p>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {wishlists.map((wishlist) => (
+                      <div key={wishlist.id} className="flex justify-between items-center py-4">
+                        <span className="text-gray-800">{wishlist.title}</span>
+                        <Link
+                          href={`/wishlists/${wishlist.id}`}
+                          className="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                          Gérer la liste
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <CreateWishlistModal 
+        isOpen={isWishlistModalOpen}
+        onClose={() => setIsWishlistModalOpen(false)}
+      />
     </div>
   );
 }

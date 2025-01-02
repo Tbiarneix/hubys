@@ -23,4 +23,49 @@ model User {
   birthDate DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  wishlists WishList[]
+}
+
+model WishList {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  categories  Category[]
+  items       WishlistItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Category {
+  id          String         @id @default(cuid())
+  name        String
+  order       Int
+  wishlistId  String
+  wishlist    WishList      @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  items       WishlistItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([wishlistId])
+}
+
+model WishlistItem {
+  id          String    @id @default(cuid())
+  name        String
+  url         String?
+  comment     String?
+  order       Int
+  wishlistId  String
+  wishlist    WishList  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([wishlistId])
+  @@index([categoryId])
 }

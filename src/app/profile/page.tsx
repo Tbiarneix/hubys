@@ -11,6 +11,7 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { AccountForm } from '@/components/profile/AccountForm';
 import { generateAvatarUrl } from '@/utils/avatar';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from "sonner";
 
 interface WishList {
@@ -23,6 +24,7 @@ interface ProfileFormData {
   name: string;
   bio: string;
   image: string;
+  birthDate: string;
 }
 
 interface UserProfile {
@@ -31,6 +33,7 @@ interface UserProfile {
   bio: string;
   avatar: string;
   email: string;
+  birthDate: string | null;
 }
 
 export default function ProfilePage() {
@@ -45,6 +48,7 @@ export default function ProfilePage() {
     name: "",
     bio: "",
     image: "",
+    birthDate: "",
   });
 
   useEffect(() => {
@@ -59,6 +63,7 @@ export default function ProfilePage() {
               name: profile.name || "",
               bio: profile.bio || "",
               image: profile.avatar || "",
+              birthDate: profile.birthDate || "",
             });
           }
         } catch (error) {
@@ -209,6 +214,20 @@ export default function ProfilePage() {
                               </div>
 
                               <div>
+                                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Date de naissance
+                                </label>
+                                <input
+                                  type="date"
+                                  id="birthDate"
+                                  name="birthDate"
+                                  value={formData.birthDate}
+                                  onChange={handleInputChange}
+                                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
                                 <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
                                   Bio
                                 </label>
@@ -263,19 +282,26 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
-                  <img
+                  <Image
                     src={userProfile?.avatar || generateAvatarUrl(userProfile?.name || '')}
                     alt={userProfile?.name || "Avatar"}
-                    className="w-full h-full object-cover"
+                    width={96}
+                    height={96}
+                    className="object-cover"
                   />
                 </div>
                 <div className="ml-4">
                   <h2 className="text-xl font-semibold text-gray-900">
                     {userProfile?.name || "Sans nom"}
                   </h2>
+                  {userProfile?.birthDate && (
+                    <p className="text-sm text-gray-500">
+                      {new Date(userProfile.birthDate).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
                   {userProfile?.bio && (
                     <p className="mt-1 text-gray-600 italic">
-                      "{userProfile.bio}"
+                      &quot;{userProfile.bio}&quot;
                     </p>
                   )}
                 </div>

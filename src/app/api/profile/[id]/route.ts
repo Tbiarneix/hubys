@@ -9,10 +9,11 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const { id } = await params
   try {
     const profile = await prisma.user.findUnique({
       where: {
-        id: params.id,
+        id: id,
       },
       select: {
         id: true,
@@ -20,6 +21,7 @@ export async function GET(
         email: true,
         avatar: true,
         bio: true,
+        birthDate: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -47,7 +49,7 @@ export async function PUT(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   { params }: { params: any }
 ) {
-  const { id } = await params
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -59,7 +61,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, bio, image } = body;
+    const { name, bio, image, birthDate } = body;
 
     const updatedProfile = await prisma.user.update({
       where: {
@@ -69,6 +71,7 @@ export async function PUT(
         name: name,
         bio: bio,
         avatar: image,
+        birthDate: birthDate ? new Date(birthDate) : null,
       },
       select: {
         id: true,
@@ -76,6 +79,7 @@ export async function PUT(
         email: true,
         avatar: true,
         bio: true,
+        birthDate: true,
         updatedAt: true,
       },
     });
@@ -94,7 +98,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const id = params.id;
+  const { id } = params;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.id !== id) {

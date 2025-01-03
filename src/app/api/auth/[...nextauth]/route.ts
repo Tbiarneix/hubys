@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import prisma from "@/lib/prisma";
 
-const authOptions: AuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -33,30 +33,28 @@ const authOptions: AuthOptions = {
           throw new Error("Mot de passe incorrect");
         }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
+        return user;
       },
     }),
   ],
-  pages: {
-    signIn: "/",
-  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id as string;
+        session.user.id = token.id;
+        session.user.email = token.email;
       }
       return session;
     },
+  },
+  pages: {
+    signIn: "/",
   },
   session: {
     strategy: "jwt",

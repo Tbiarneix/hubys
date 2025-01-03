@@ -12,10 +12,10 @@
 ## Authentification et Gestion des Utilisateurs
 - [x] Créer le système d'authentification avec JWT
 - [x] Développer le formulaire de connexion/inscription
-- [ ] Implémenter la gestion des profils utilisateurs
-  - [ ] Avatar
-  - [ ] Informations personnelles
-  - [ ] Bio/Humeur du jour
+- [x] Implémenter la gestion des profils utilisateurs
+  - [x] Avatar
+  - [x] Informations personnelles
+  - [x] Bio/Humeur du jour
   - [ ] Gestion des relations (couple, enfants)
 
 ## Dashboard Utilisateur

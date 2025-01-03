@@ -12,9 +12,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Prisma instance:', prisma);
-    console.log('Available models:', Object.keys(prisma));
-
     const wishlist = await prisma.wishList.findUnique({
       where: { id: params.id },
       include: {

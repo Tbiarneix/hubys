@@ -19,12 +19,12 @@
   - [ ] Gestion des relations (couple, enfants)
 
 ## Dashboard Utilisateur
-- [ ] Créer l'interface du dashboard
-- [ ] Implémenter la gestion des listes de souhaits
-  - [ ] CRUD des listes
-  - [ ] Système de catégories
-  - [ ] Drag and drop pour réorganisation
-  - [ ] Version publique avec système de réservation
+- [x] Créer l'interface du dashboard
+- [x] Implémenter la gestion des listes de souhaits
+  - [x] CRUD des listes
+  - [x] Système de catégories
+  - [x] Drag and drop pour réorganisation
+  - [x] Version publique avec système de réservation
 - [ ] Développer le système de chat
   - [ ] Chat privé
   - [ ] Chat de groupe

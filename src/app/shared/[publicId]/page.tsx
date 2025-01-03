@@ -2,8 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Gift } from 'lucide-react';
-import prisma from '@/lib/prisma';
+import { Gift } from 'lucide-react';
 
 interface WishlistItem {
   id: string;
@@ -250,7 +249,7 @@ export default function SharedWishlistPage(props: { params: Promise<{ publicId: 
                                   checked={item.isReserved}
                                   onChange={(e) => handleCheckboxChange(item.id, e.target.checked)}
                                   className="w-4 h-4 text-black rounded border-gray-300 focus:ring-gray-500"
-                                  disabled={item.isReserved && item.reserverName}
+                                  disabled={item.isReserved}
                                 />
                                 <span className="text-sm text-gray-700">
                                   {item.isReserved && item.reserverName
@@ -344,7 +343,7 @@ export default function SharedWishlistPage(props: { params: Promise<{ publicId: 
                                 checked={item.isReserved}
                                 onChange={(e) => handleCheckboxChange(item.id, e.target.checked)}
                                 className="w-4 h-4 text-black rounded border-gray-300 focus:ring-gray-500"
-                                disabled={item.isReserved && item.reserverName}
+                                disabled={item.isReserved}
                               />
                               <span className="text-sm text-gray-700">
                                 {item.isReserved && item.reserverName

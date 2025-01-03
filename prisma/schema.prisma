@@ -65,6 +65,8 @@ model WishlistItem {
   wishlist    WishList  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
+  isReserved  Boolean   @default(false)
+  reserverName String?  // Nom de la personne qui réserve
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

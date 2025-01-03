@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Gift } from 'lucide-react';
 import prisma from '@/lib/prisma';
 
 interface WishlistItem {
@@ -11,6 +11,8 @@ interface WishlistItem {
   url: string | null;
   comment: string | null;
   categoryId: string | null;
+  isReserved: boolean;
+  reserverName: string | null;
 }
 
 interface Category {
@@ -30,6 +32,75 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
   const [wishlist, setWishlist] = useState<SharedWishlist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reserverNames, setReserverNames] = useState<{ [key: string]: string }>({});
+  const [showNameInput, setShowNameInput] = useState<{ [key: string]: boolean }>({});
+  const [nameErrors, setNameErrors] = useState<{ [key: string]: string }>({});
+
+  const handleCheckboxChange = async (itemId: string, checked: boolean) => {
+    if (!checked) {
+      // Si on décoche, on envoie directement la requête avec reserverName: null
+      handleReserveItem(itemId, null);
+    } else {
+      // Si on coche, on affiche l'input pour le nom
+      setShowNameInput(prev => ({ ...prev, [itemId]: true }));
+      // Réinitialiser l'erreur quand on affiche l'input
+      setNameErrors(prev => ({ ...prev, [itemId]: '' }));
+    }
+  };
+
+  const handleNameSubmit = async (itemId: string) => {
+    const name = reserverNames[itemId];
+    if (!name?.trim()) {
+      setNameErrors(prev => ({ ...prev, [itemId]: 'Veuillez entrer votre nom' }));
+      return;
+    }
+
+    setNameErrors(prev => ({ ...prev, [itemId]: '' }));
+    await handleReserveItem(itemId, name.trim());
+    setShowNameInput(prev => ({ ...prev, [itemId]: false }));
+  };
+
+  const handleReserveItem = async (itemId: string, reserverName: string | null) => {
+    try {
+      const response = await fetch(`/api/shared/items/${itemId}/reserve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reserverName: reserverName }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la réservation');
+      }
+
+      const updatedItem = await response.json();
+      
+      // Mettre à jour l'état local
+      setWishlist(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.map(item =>
+            item.id === itemId
+              ? { ...item, isReserved: updatedItem.isReserved, reserverName: updatedItem.reserverName }
+              : item
+          ),
+        };
+      });
+
+      // Réinitialiser le nom si la réservation est annulée
+      if (!updatedItem.isReserved) {
+        setReserverNames(prev => {
+          const newNames = { ...prev };
+          delete newNames[itemId];
+          return newNames;
+        });
+      }
+    } catch (error) {
+      console.error('Error reserving item:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -74,8 +145,8 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
             href="/"
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour à l'accueil
+            <Gift className="h-4 w-4 mr-2" />
+            Une liste créée avec Hubidays, vous aussi créez la vôtre !
           </Link>
         </div>
 
@@ -102,7 +173,7 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
                     key={item.id}
                     className="flex items-start gap-4 p-4 rounded-lg border border-gray-200"
                   >
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-medium text-gray-900">
                         {item.url ? (
                           <a
@@ -121,6 +192,61 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
                         <p className="mt-1 text-sm text-gray-600">{item.comment}</p>
                       )}
                     </div>
+                    <div className="flex items-center gap-3">
+                      {showNameInput[item.id] ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder="Votre nom"
+                              className={`px-2 py-1 border rounded text-sm text-gray-800 ${
+                                nameErrors[item.id] ? 'border-red-500' : ''
+                              }`}
+                              value={reserverNames[item.id] || ''}
+                              onChange={(e) => {
+                                setReserverNames(prev => ({
+                                  ...prev,
+                                  [item.id]: e.target.value
+                                }));
+                                // Effacer l'erreur quand l'utilisateur commence à taper
+                                if (nameErrors[item.id]) {
+                                  setNameErrors(prev => ({ ...prev, [item.id]: '' }));
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleNameSubmit(item.id);
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => handleNameSubmit(item.id)}
+                              className="px-3 py-1 bg-black text-white rounded text-sm hover:bg-gray-800"
+                            >
+                              OK
+                            </button>
+                          </div>
+                          {nameErrors[item.id] && (
+                            <p className="text-red-500 text-xs">{nameErrors[item.id]}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={item.isReserved}
+                            onChange={(e) => handleCheckboxChange(item.id, e.target.checked)}
+                            className="w-4 h-4 text-black rounded border-gray-300 focus:ring-gray-500"
+                            disabled={item.isReserved && item.reserverName}
+                          />
+                          <span className="text-sm text-gray-700">
+                            {item.isReserved && item.reserverName
+                              ? `Réservé par ${item.reserverName}`
+                              : 'Réserver'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
             </div>
@@ -135,7 +261,7 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
                   key={item.id}
                   className="flex items-start gap-4 p-4 rounded-lg border border-gray-200"
                 >
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-medium text-gray-900">
                       {item.url ? (
                         <a
@@ -152,6 +278,61 @@ export default function SharedWishlistPage({ params }: { params: { publicId: str
                     </h3>
                     {item.comment && (
                       <p className="mt-1 text-sm text-gray-600">{item.comment}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {showNameInput[item.id] ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Votre nom"
+                            className={`px-2 py-1 border rounded text-sm text-gray-800 ${
+                              nameErrors[item.id] ? 'border-red-500' : ''
+                            }`}
+                            value={reserverNames[item.id] || ''}
+                            onChange={(e) => {
+                              setReserverNames(prev => ({
+                                ...prev,
+                                [item.id]: e.target.value
+                              }));
+                              // Effacer l'erreur quand l'utilisateur commence à taper
+                              if (nameErrors[item.id]) {
+                                setNameErrors(prev => ({ ...prev, [item.id]: '' }));
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleNameSubmit(item.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleNameSubmit(item.id)}
+                            className="px-3 py-1 bg-black text-white rounded text-sm hover:bg-gray-800"
+                          >
+                            OK
+                          </button>
+                        </div>
+                        {nameErrors[item.id] && (
+                          <p className="text-red-500 text-xs">{nameErrors[item.id]}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={item.isReserved}
+                          onChange={(e) => handleCheckboxChange(item.id, e.target.checked)}
+                          className="w-4 h-4 text-black rounded border-gray-300 focus:ring-gray-500"
+                          disabled={item.isReserved && item.reserverName}
+                        />
+                        <span className="text-sm text-gray-700">
+                          {item.isReserved && item.reserverName
+                            ? `Réservé par ${item.reserverName}`
+                            : 'Réserver'}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>

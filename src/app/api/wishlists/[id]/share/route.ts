@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getServerSession();
     if (!session?.user?.email) {

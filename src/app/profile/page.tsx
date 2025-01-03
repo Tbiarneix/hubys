@@ -4,12 +4,14 @@ import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Pencil, X, Plus, Loader2 } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
+import * as Tabs from '@radix-ui/react-tabs';
 import { useState, useEffect } from 'react';
 import { CreateWishlistModal } from '@/components/wishlists/CreateWishlistModal';
+import { ImageUpload } from '@/components/ImageUpload';
+import { AccountForm } from '@/components/profile/AccountForm';
+import { generateAvatarUrl } from '@/utils/avatar';
 import Link from 'next/link';
 import { toast } from "sonner";
-import { ImageUpload } from '@/components/ImageUpload';
-import { generateAvatarUrl } from '@/utils/avatar';
 
 interface WishList {
   id: string;
@@ -167,68 +169,94 @@ export default function ProfilePage() {
                         </Dialog.Close>
                       </div>
 
-                      <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="flex justify-center">
-                          <ImageUpload
-                            currentImage={formData.image || generateAvatarUrl(formData.name)}
-                            onImageSelect={(base64) => setFormData(prev => ({ ...prev, image: base64 }))}
-                          />
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                              Nom
-                            </label>
-                            <input
-                              id="name"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleInputChange}
-                              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                              Bio
-                            </label>
-                            <textarea
-                              id="bio"
-                              name="bio"
-                              value={formData.bio}
-                              onChange={handleInputChange}
-                              rows={3}
-                              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-3 pt-4">
-                          <Dialog.Close asChild>
-                            <button
-                              type="button"
-                              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Annuler
-                            </button>
-                          </Dialog.Close>
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      <Tabs.Root defaultValue="profile" className="space-y-6">
+                        <Tabs.List className="flex space-x-1 border-b border-gray-200">
+                          <Tabs.Trigger
+                            value="profile"
+                            className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-gray-900 focus:outline-none"
                           >
-                            {isSubmitting ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Enregistrement...
-                              </>
-                            ) : (
-                              'Enregistrer'
-                            )}
-                          </button>
-                        </div>
-                      </form>
+                            Profil
+                          </Tabs.Trigger>
+                          <Tabs.Trigger
+                            value="account"
+                            className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-gray-900 focus:outline-none"
+                          >
+                            Compte
+                          </Tabs.Trigger>
+                        </Tabs.List>
+
+                        <Tabs.Content value="profile" className="focus:outline-none">
+                          <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="flex justify-center">
+                              <ImageUpload
+                                currentImage={formData.image || generateAvatarUrl(formData.name)}
+                                onImageSelect={(base64) => setFormData(prev => ({ ...prev, image: base64 }))}
+                              />
+                            </div>
+
+                            <div className="space-y-4">
+                              <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Nom
+                                </label>
+                                <input
+                                  id="name"
+                                  name="name"
+                                  value={formData.name}
+                                  onChange={handleInputChange}
+                                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Bio
+                                </label>
+                                <textarea
+                                  id="bio"
+                                  name="bio"
+                                  value={formData.bio}
+                                  onChange={handleInputChange}
+                                  rows={3}
+                                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none resize-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-3">
+                              <Dialog.Close asChild>
+                                <button
+                                  type="button"
+                                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                >
+                                  Annuler
+                                </button>
+                              </Dialog.Close>
+                              <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isSubmitting ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Enregistrement...
+                                  </>
+                                ) : (
+                                  'Enregistrer'
+                                )}
+                              </button>
+                            </div>
+                          </form>
+                        </Tabs.Content>
+
+                        <Tabs.Content value="account" className="focus:outline-none">
+                          <AccountForm 
+                            currentEmail={userProfile?.email || ''} 
+                            userId={session?.user?.id || ''}
+                          />
+                        </Tabs.Content>
+                      </Tabs.Root>
                     </Dialog.Content>
                   </Dialog.Portal>
                 </Dialog.Root>
@@ -241,15 +269,15 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="ml-4 space-y-2">
-                  <p className="text-gray-900">
-                    <span className="font-medium">Nom:</span>{" "}
-                    {userProfile?.name || "Non renseigné"}
-                  </p>
-                  <p className="text-gray-900">
-                    <span className="font-medium">Email:</span>{" "}
-                    {userProfile?.email}
-                  </p>
+                <div className="ml-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {userProfile?.name || "Sans nom"}
+                  </h2>
+                  {userProfile?.bio && (
+                    <p className="mt-1 text-gray-600 italic">
+                      "{userProfile.bio}"
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

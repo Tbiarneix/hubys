@@ -28,7 +28,8 @@ interface SharedWishlist {
   items: WishlistItem[];
 }
 
-export default function SharedWishlistPage({ params }: { params: { publicId: string } }) {
+export default function SharedWishlistPage(props: { params: Promise<{ publicId: string }> }) {
+  const params = use(props.params);
   const [wishlist, setWishlist] = useState<SharedWishlist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

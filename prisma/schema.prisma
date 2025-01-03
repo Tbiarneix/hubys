@@ -14,16 +14,19 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  avatar    String?
-  bio       String?
-  birthDate DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  wishlists WishList[]
+  id                    String              @id @default(cuid())
+  email                 String              @unique
+  password              String
+  name                  String?
+  avatar                String?
+  bio                   String?
+  birthDate             DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  wishlists             WishList[]
+  children              Child[]
+  sentInvitations       PartnerInvitation[] @relation("SentInvitations")
+  receivedInvitations   PartnerInvitation[] @relation("ReceivedInvitations")
 }
 
 model WishList {
@@ -72,4 +75,32 @@ model WishlistItem {
 
   @@index([wishlistId])
   @@index([categoryId])
+}
+
+model Child {
+  id        String    @id @default(cuid())
+  firstName String
+  birthDate DateTime
+  parentId  String
+  parent    User      @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([parentId])
+}
+
+model PartnerInvitation {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   User     @relation("SentInvitations", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String?
+  toUser     User?    @relation("ReceivedInvitations", fields: [toUserId], references: [id])
+  email      String
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([email])
 }

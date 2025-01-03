@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     console.log('Prisma instance:', prisma);
     console.log('Available models:', Object.keys(prisma));
 
-    const wishlist = await prisma.WishList.findUnique({
+    const wishlist = await prisma.wishList.findUnique({
       where: { id: params.id },
       include: {
         user: true,
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
     }
 
-    const items = await prisma.WishlistItem.findMany({
+    const items = await prisma.wishlistItem.findMany({
       where: { wishlistId: params.id },
       orderBy: { order: 'asc' },
       include: {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const wishlist = await prisma.WishList.findUnique({
+    const wishlist = await prisma.wishList.findUnique({
       where: { id: params.id },
     });
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     }
 
     // Get the highest order number within the category or wishlist
-    const lastItem = await prisma.WishlistItem.findFirst({
+    const lastItem = await prisma.wishlistItem.findFirst({
       where: {
         wishlistId: params.id,
         categoryId: categoryId || null,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
     const order = lastItem ? lastItem.order + 1 : 0;
 
-    const item = await prisma.WishlistItem.create({
+    const item = await prisma.wishlistItem.create({
       data: {
         name,
         url,
@@ -127,7 +127,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const wishlist = await prisma.WishList.findUnique({
+    const wishlist = await prisma.wishList.findUnique({
       where: { id: params.id },
     });
 
@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     // Update all items in a transaction
     await prisma.$transaction(
       items.map((item: { id: string; order: number; categoryId: string | null }) =>
-        prisma.WishlistItem.update({
+        prisma.wishlistItem.update({
           where: { id: item.id },
           data: { 
             order: item.order,

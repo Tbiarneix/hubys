@@ -43,6 +43,7 @@ model WishList {
 model Category {
   id          String         @id @default(cuid())
   name        String
+  description String?
   order       Int
   wishlistId  String
   wishlist    WishList      @relation(fields: [wishlistId], references: [id], onDelete: Cascade)

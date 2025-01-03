@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
 
-  const updatedWishlist = await prisma.WishList.update({
+  const updatedWishlist = await prisma.wishList.update({
     where: { id: params.id },
     data: { title, description },
   });
@@ -96,7 +96,7 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await prisma.WishList.delete({
+  await prisma.wishList.delete({
     where: { id: params.id },
   });
 

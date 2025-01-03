@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,10 @@ import {
 import { AddItemModal } from '@/components/wishlists/AddItemModal';
 import { AddCategoryModal } from '@/components/wishlists/AddCategoryModal';
 import { DraggableItem } from '@/components/wishlists/DraggableItem';
+import { EditItemModal } from '@/components/wishlists/EditItemModal';
+import { EditWishlistModal } from '@/components/wishlists/EditWishlistModal';
+import { EditCategoryModal } from '@/components/wishlists/EditCategoryModal';
+import { DeleteConfirmationModal } from '@/components/wishlists/DeleteConfirmationModal';
 
 interface WishList {
   id: string;
@@ -36,6 +40,7 @@ interface WishList {
 interface Category {
   id: string;
   name: string;
+  description: string | null;
   order: number;
 }
 
@@ -58,6 +63,12 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
   const [error, setError] = useState<string | null>(null);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
+  const [isEditWishlistModalOpen, setIsEditWishlistModalOpen] = useState(false);
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -182,6 +193,96 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     }
   };
 
+  const handleEditItem = async (item: WishlistItem) => {
+    setSelectedItem(item);
+    setIsEditItemModalOpen(true);
+  };
+
+  const handleSaveEditedItem = async (editedItem: { id: string; name: string; url?: string; comment?: string; categoryId?: string }) => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/items/${editedItem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedItem),
+      });
+
+      if (!response.ok) throw new Error('Failed to update item');
+
+      const updatedItem = await response.json();
+      setItems(items.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      ));
+    } catch (err) {
+      console.error('Error updating item:', err);
+    }
+  };
+
+  const handleSaveWishlist = async (data: { title: string; description: string | null }) => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) throw new Error('Failed to update wishlist');
+
+      const updatedWishlist = await response.json();
+      setWishlist(updatedWishlist);
+    } catch (err) {
+      console.error('Error updating wishlist:', err);
+    }
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setSelectedCategory(category);
+    setIsEditCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (data: { id: string; name: string; description: string | null }) => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/categories/${data.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) throw new Error('Failed to update category');
+
+      const updatedCategory = await response.json();
+      setCategories(categories.map(category => 
+        category.id === updatedCategory.id ? updatedCategory : category
+      ));
+    } catch (err) {
+      console.error('Error updating category:', err);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteConfirmationOpen(true);
+  };
+
+  const handleDeleteWishlist = async () => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete wishlist');
+
+      // Rediriger vers la page de profil
+      window.location.href = '/profile';
+    } catch (err) {
+      console.error('Error deleting wishlist:', err);
+    }
+  };
+
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -214,17 +315,45 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <Link
-            href="/profile"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour au profil
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link
+              href="/profile"
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour au profil
+            </Link>
+            {isOwner && (
+              <button
+                onClick={handleDeleteClick}
+                className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer la liste
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black">{wishlist.title}</h1>
+          <div className="flex items-start gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold text-black">{wishlist.title}</h1>
+                {isOwner && (
+                  <button
+                    onClick={() => setIsEditWishlistModalOpen(true)}
+                    className="p-1.5 hover:bg-gray-100 rounded-full"
+                  >
+                    <Pencil className="h-5 w-5 text-gray-500" />
+                  </button>
+                )}
+              </div>
+              {wishlist.description && (
+                <p className="mt-2 text-gray-600">{wishlist.description}</p>
+              )}
+            </div>
+          </div>
           {isOwner && (
             <div className="mt-4 flex gap-3">
               <button
@@ -257,7 +386,24 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
             >
               {categories.map(category => (
                 <div key={category.id} className="space-y-3">
-                  <h2 className="text-lg font-semibold text-gray-900">{category.name}</h2>
+                  <div className="flex items-start gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900">{category.name}</h2>
+                        {isOwner && (
+                          <button
+                            onClick={() => handleEditCategory(category)}
+                            className="p-1.5 hover:bg-gray-100 rounded-full"
+                          >
+                            <Pencil className="h-4 w-4 text-gray-500" />
+                          </button>
+                        )}
+                      </div>
+                      {category.description && (
+                        <p className="mt-1 text-sm text-gray-600">{category.description}</p>
+                      )}
+                    </div>
+                  </div>
                   {items
                     .filter(item => item.categoryId === category.id)
                     .map(item => (
@@ -268,6 +414,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                         url={item.url}
                         comment={item.comment}
                         onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
+                        onEdit={isOwner ? () => handleEditItem(item) : undefined}
                         isOwner={isOwner}
                       />
                     ))}
@@ -286,6 +433,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                       url={item.url}
                       comment={item.comment}
                       onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
+                      onEdit={isOwner ? () => handleEditItem(item) : undefined}
                       isOwner={isOwner}
                     />
                   ))}
@@ -306,6 +454,42 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
         onAdd={handleAddCategory}
+      />
+
+      <EditItemModal
+        isOpen={isEditItemModalOpen}
+        onClose={() => {
+          setIsEditItemModalOpen(false);
+          setSelectedItem(null);
+        }}
+        onEdit={handleSaveEditedItem}
+        categories={categories}
+        item={selectedItem}
+      />
+
+      <EditWishlistModal
+        isOpen={isEditWishlistModalOpen}
+        onClose={() => setIsEditWishlistModalOpen(false)}
+        onEdit={handleSaveWishlist}
+        wishlist={wishlist}
+      />
+
+      <EditCategoryModal
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => {
+          setIsEditCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        onEdit={handleSaveCategory}
+        category={selectedCategory}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteConfirmationOpen}
+        onClose={() => setIsDeleteConfirmationOpen(false)}
+        onConfirm={handleDeleteWishlist}
+        title="Supprimer la liste"
+        description="Êtes-vous sûr de vouloir supprimer cette liste ? Cette action est irréversible et supprimera tous les cadeaux et catégories associés."
       />
     </div>
   );

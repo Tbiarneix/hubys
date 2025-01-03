@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const categories = await prisma.Category.findMany({
+  const categories = await prisma.category.findMany({
     where: { wishlistId: params.id },
     orderBy: { order: 'asc' },
     include: {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -80,14 +80,14 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   }
 
   // Get the highest order number
-  const lastCategory = await prisma.Category.findFirst({
+  const lastCategory = await prisma.category.findFirst({
     where: { wishlistId: params.id },
     orderBy: { order: 'desc' },
   });
 
   const order = lastCategory ? lastCategory.order + 1 : 0;
 
-  const category = await prisma.Category.create({
+  const category = await prisma.category.create({
     data: {
       name,
       order,
@@ -115,7 +115,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const wishlist = await prisma.WishList.findUnique({
+  const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
   });
 
@@ -132,7 +132,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   // Update all categories in a transaction
   await prisma.$transaction(
     categories.map((cat: { id: string; order: number }) =>
-      prisma.Category.update({
+      prisma.category.update({
         where: { id: cat.id },
         data: { order: cat.order },
       })

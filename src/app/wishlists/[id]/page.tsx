@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Share2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -283,6 +283,26 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/share`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du partage de la liste');
+      }
+      
+      const { publicId } = await response.json();
+      const shareUrl = `${window.location.origin}/shared/${publicId}`;
+      
+      await navigator.clipboard.writeText(shareUrl);
+      window.location.href = `/shared/${publicId}`;
+    } catch (error) {
+      console.error('Error sharing wishlist:', error);
+    }
+  };
+
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -355,20 +375,29 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
             </div>
           </div>
           {isOwner && (
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex justify-between">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsAddItemModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un cadeau
+                </button>
+                <button
+                  onClick={() => setIsAddCategoryModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une catégorie
+                </button>
+              </div>
               <button
-                onClick={() => setIsAddItemModalOpen(true)}
+                onClick={handleShare}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un cadeau
-              </button>
-              <button
-                onClick={() => setIsAddCategoryModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une catégorie
+                <Share2 className="h-4 w-4 mr-2" />
+                Partager la liste
               </button>
             </div>
           )}

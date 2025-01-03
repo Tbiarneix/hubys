@@ -28,6 +28,7 @@ model User {
 
 model WishList {
   id          String    @id @default(cuid())
+  publicId    String?   @unique @default(cuid())
   title       String
   description String?
   userId      String

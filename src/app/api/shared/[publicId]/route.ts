@@ -26,6 +26,8 @@ export async function GET(request: Request, props: { params: Promise<{ publicId:
             url: true,
             comment: true,
             categoryId: true,
+            isReserved: true,
+            reserverName: true
           },
           orderBy: {
             order: 'asc',
@@ -35,12 +37,12 @@ export async function GET(request: Request, props: { params: Promise<{ publicId:
     });
 
     if (!wishlist) {
-      return new NextResponse('Liste non trouvée', { status: 404 });
+      return NextResponse.json({ error: 'Liste non trouvée' }, { status: 404 });
     }
 
     return NextResponse.json(wishlist);
   } catch (error) {
     console.error('Error fetching shared wishlist:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

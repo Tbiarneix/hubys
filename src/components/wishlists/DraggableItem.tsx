@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Link as LinkIcon, Trash2, Pencil } from 'lucide-react';
+import { GripVertical, Link as LinkIcon, Trash2, Pencil, RotateCcw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DraggableItemProps {
   id: string;
@@ -9,10 +10,20 @@ interface DraggableItemProps {
   comment?: string | null;
   onDelete?: () => void;
   onEdit?: () => void;
+  onResetReservation?: () => void;
   isOwner: boolean;
 }
 
-export function DraggableItem({ id, name, url, comment, onDelete, onEdit, isOwner }: DraggableItemProps) {
+export function DraggableItem({ 
+  id, 
+  name, 
+  url, 
+  comment, 
+  onDelete, 
+  onEdit, 
+  onResetReservation,
+  isOwner 
+}: DraggableItemProps) {
   const {
     attributes,
     listeners,
@@ -56,30 +67,74 @@ export function DraggableItem({ id, name, url, comment, onDelete, onEdit, isOwne
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {url && (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6"
-                >
-                  <LinkIcon className="h-4 w-4 text-gray-500" />
-                </a>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6"
+                      >
+                        <LinkIcon className="h-4 w-4 text-gray-500" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Voir l'article</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {isOwner && onEdit && (
-                <button
-                  onClick={onEdit}
-                  className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6 text-gray-500"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={onEdit}
+                        className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6 text-gray-500"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Modifier l'article</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {isOwner && onResetReservation && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={onResetReservation}
+                        className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6 text-gray-500"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Réinitialiser l'état de la réservation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {isOwner && onDelete && (
-                <button
-                  onClick={onDelete}
-                  className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6 text-red-500"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={onDelete}
+                        className="inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded w-6 h-6 text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Supprimer l'article</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>

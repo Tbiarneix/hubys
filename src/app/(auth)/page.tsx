@@ -82,9 +82,6 @@ export default function Home() {
       if (!response.ok) {
         throw new Error(data.error || 'Une erreur est survenue lors de l\'inscription');
       }
-
-      // Redirection ou autre action après inscription réussie
-      console.log('Inscription réussie:', data);
       
       // Réinitialiser le formulaire
       setName('');

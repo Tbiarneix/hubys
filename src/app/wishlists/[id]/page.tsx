@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Share2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -27,6 +27,7 @@ import { EditItemModal } from '@/components/wishlists/EditItemModal';
 import { EditWishlistModal } from '@/components/wishlists/EditWishlistModal';
 import { EditCategoryModal } from '@/components/wishlists/EditCategoryModal';
 import { DeleteConfirmationModal } from '@/components/wishlists/DeleteConfirmationModal';
+import { ResetReservationModal } from '@/components/wishlists/ResetReservationModal';
 
 interface WishList {
   id: string;
@@ -69,6 +70,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
+  const [selectedItemToReset, setSelectedItemToReset] = useState<WishlistItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -283,6 +285,76 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/share`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du partage de la liste');
+      }
+      
+      const { publicId } = await response.json();
+      const shareUrl = `${window.location.origin}/shared/${publicId}`;
+      
+      await navigator.clipboard.writeText(shareUrl);
+      window.open(`/shared/${publicId}`, '_blank');
+    } catch (error) {
+      console.error('Error sharing wishlist:', error);
+    }
+  };
+
+  const handleResetReservation = async (itemId: string) => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/items/${itemId}/reset-reservation`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', response.status, errorText);
+        throw new Error('Failed to reset reservation');
+      }
+
+      // Refresh the data
+      const fetchData = async () => {
+        try {
+          const [wishlistRes, categoriesRes, itemsRes] = await Promise.all([
+            fetch(`/api/wishlists/${params.id}`),
+            fetch(`/api/wishlists/${params.id}/categories`),
+            fetch(`/api/wishlists/${params.id}/items`),
+          ]);
+
+          if (!wishlistRes.ok) throw new Error('Failed to fetch wishlist');
+          if (!categoriesRes.ok) throw new Error('Failed to fetch categories');
+          if (!itemsRes.ok) throw new Error('Failed to fetch items');
+
+          const [wishlistData, categoriesData, itemsData] = await Promise.all([
+            wishlistRes.json(),
+            categoriesRes.json(),
+            itemsRes.json(),
+          ]);
+
+          setWishlist(wishlistData);
+          setCategories(categoriesData);
+          setItems(itemsData);
+        } catch (err) {
+          setError('Une erreur est survenue lors du chargement de la liste');
+          console.error('Error fetching data:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      if (session) {
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error resetting reservation:', error);
+    }
+  };
+
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -355,20 +427,29 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
             </div>
           </div>
           {isOwner && (
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex justify-between">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsAddItemModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un cadeau
+                </button>
+                <button
+                  onClick={() => setIsAddCategoryModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une catégorie
+                </button>
+              </div>
               <button
-                onClick={() => setIsAddItemModalOpen(true)}
+                onClick={handleShare}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un cadeau
-              </button>
-              <button
-                onClick={() => setIsAddCategoryModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une catégorie
+                <Share2 className="h-4 w-4 mr-2" />
+                Partager la liste
               </button>
             </div>
           )}
@@ -415,6 +496,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                         comment={item.comment}
                         onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
                         onEdit={isOwner ? () => handleEditItem(item) : undefined}
+                        onResetReservation={isOwner ? () => setSelectedItemToReset(item) : undefined}
                         isOwner={isOwner}
                       />
                     ))}
@@ -434,6 +516,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                       comment={item.comment}
                       onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
                       onEdit={isOwner ? () => handleEditItem(item) : undefined}
+                      onResetReservation={isOwner ? () => setSelectedItemToReset(item) : undefined}
                       isOwner={isOwner}
                     />
                   ))}
@@ -491,6 +574,18 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
         title="Supprimer la liste"
         description="Êtes-vous sûr de vouloir supprimer cette liste ? Cette action est irréversible et supprimera tous les cadeaux et catégories associés."
       />
+
+      {selectedItemToReset && (
+        <ResetReservationModal
+          isOpen={!!selectedItemToReset}
+          onClose={() => setSelectedItemToReset(null)}
+          onConfirm={() => {
+            handleResetReservation(selectedItemToReset.id);
+            setSelectedItemToReset(null);
+          }}
+          itemName={selectedItemToReset.name}
+        />
+      )}
     </div>
   );
 }

@@ -16,18 +16,23 @@ export async function DELETE(
 
     const { deleteCompletely } = await request.json();
 
-    // Récupérer l'enfant avec ses relations parent
+    // Récupérer l'enfant avec ses parents
     const child = await prisma.child.findUnique({
       where: {
         id: childId,
       },
       include: {
-        parent: true,
+        parents: true,
       },
     });
 
     if (!child) {
       return new NextResponse("Child not found", { status: 404 });
+    }
+
+    // Vérifier que l'utilisateur est bien un parent de l'enfant
+    if (!child.parents.some(parent => parent.id === id)) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
     if (deleteCompletely) {
@@ -39,7 +44,7 @@ export async function DELETE(
       });
     } else {
       // Si c'est le seul parent, on supprime l'enfant
-      if (!child.parent) {
+      if (child.parents.length <= 1) {
         await prisma.child.delete({
           where: {
             id: childId,
@@ -52,7 +57,11 @@ export async function DELETE(
             id: childId,
           },
           data: {
-            parentId: null,
+            parents: {
+              disconnect: {
+                id: id
+              }
+            }
           },
         });
       }

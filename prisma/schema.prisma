@@ -24,7 +24,7 @@ model User {
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   wishlists             WishList[]
-  children              Child[]
+  children              Child[]             @relation("ParentChild")
   sentInvitations       PartnerInvitation[] @relation("SentInvitations")
   receivedInvitations   PartnerInvitation[] @relation("ReceivedInvitations")
 }
@@ -81,12 +81,9 @@ model Child {
   id        String    @id @default(cuid())
   firstName String
   birthDate DateTime
-  parentId  String
-  parent    User      @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parents   User[]    @relation("ParentChild")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  @@index([parentId])
 }
 
 model PartnerInvitation {

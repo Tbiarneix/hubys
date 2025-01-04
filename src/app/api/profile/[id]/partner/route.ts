@@ -182,21 +182,31 @@ export async function PATCH(
       include: {
         fromUser: {
           include: {
-            children: true,
-          },
-        },
-      },
+            children: {
+              include: {
+                parents: true
+              }
+            }
+          }
+        }
+      }
     });
 
-    // Si accepté, copier les enfants vers le partenaire
+    // Si accepté, ajouter le partenaire comme parent des enfants
     if (status === "ACCEPTED" && invitation.fromUser.children.length > 0) {
-      await prisma.child.createMany({
-        data: invitation.fromUser.children.map(child => ({
-          firstName: child.firstName,
-          birthDate: child.birthDate,
-          parentId: session.user.id,
-        })),
-      });
+      // Mettre à jour chaque enfant pour ajouter le nouveau parent
+      await Promise.all(
+        invitation.fromUser.children.map(child =>
+          prisma.child.update({
+            where: { id: child.id },
+            data: {
+              parents: {
+                connect: { id: session.user.id }
+              }
+            }
+          })
+        )
+      );
     }
 
     return NextResponse.json(invitation);

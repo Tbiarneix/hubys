@@ -1,4 +1,4 @@
-# DEVBOOK - Hubidays
+# DEVBOOK - Hubilys
 
 ## Configuration initiale
 - [x] Initialiser un projet Next.js (latest)
@@ -27,17 +27,17 @@
   - [x] Version publique avec système de réservation
 - [ ] Développer le système de chat
   - [ ] Chat privé
-  - [ ] Chat de groupe
-- [ ] Gestion des groupes
-  - [ ] Création/Invitation
-  - [ ] Interface de groupe
+  - [x] Chat de groupe
+- [x] Gestion des groupes
+  - [x] Création/Invitation
+  - [x] Interface de groupe
 - [ ] Gestion des événements indépendants
 
 ## Fonctionnalités de Groupe
-- [ ] Système d'invitation (email + lien temporaire)
-- [ ] Interface de groupe
-  - [ ] Liste des membres
-  - [ ] Chat de groupe
+- [x] Système d'invitation (email + lien temporaire)
+- [x] Interface de groupe
+  - [x] Liste des membres
+  - [x] Chat de groupe
 - [ ] Implémentation du Secret Santa
   - [ ] Algorithme de tirage au sort
   - [ ] Interface de révélation

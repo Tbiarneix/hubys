@@ -37,7 +37,7 @@ export default function Header() {
               </svg>
             </button>
             <Link href="/profile" className="ml-4 text-xl font-bold text-black">
-              Hubidays
+              Hubilys
             </Link>
           </div>
           <button

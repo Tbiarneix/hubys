@@ -3,7 +3,7 @@
 
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Pencil, Trash2, Plus, Loader2, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2, X, Check } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useState, useEffect } from 'react';
@@ -30,6 +30,16 @@ interface Group {
   id: string;
   name: string;
   createdAt: string;
+}
+
+interface GroupInvitation {
+  id: string;
+  groupId: string;
+  groupName: string;
+  fromUser: Partner;
+  toUser: Partner | null;
+  email: string;
+  status: string;
 }
 
 interface ProfileFormData {
@@ -95,6 +105,7 @@ export default function ProfilePage() {
   const [isSubmittingPartner, setIsSubmittingPartner] = useState(false);
   const [partnerInvitation, setPartnerInvitation] = useState<PartnerInvitation | null>(null);
   const [partnerToRemove, setPartnerToRemove] = useState<PartnerInvitation | null>(null);
+  const [groupInvitations, setGroupInvitations] = useState<GroupInvitation[]>([]);
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -103,33 +114,34 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       if (session?.user?.id) {
         try {
-          const [profileRes, childrenRes, partnerRes, wishlistsRes, groupsRes] = await Promise.all([
+          const [profileRes, childrenRes, partnerRes, wishlistsRes, groupsRes, groupInvitationsRes] = await Promise.all([
             fetch(`/api/profile/${session.user.id}`),
             fetch(`/api/profile/${session.user.id}/children`),
             fetch(`/api/profile/${session.user.id}/partner`),
             fetch('/api/wishlists'),
-            fetch('/api/groups')
+            fetch('/api/groups'),
+            fetch('/api/groups/invitations'),
           ]);
           
           if (profileRes.ok) {
-            const profile = await profileRes.json();
-            setUserProfile(profile);
+            const data = await profileRes.json();
+            setUserProfile(data);
             setFormData({
-              name: profile.name || "",
-              bio: profile.bio || "",
-              image: profile.avatar || "",
-              birthDate: profile.birthDate || "",
+              name: data.name || '',
+              bio: data.bio || '',
+              image: data.avatar || '',
+              birthDate: data.birthDate ? format(new Date(data.birthDate), 'yyyy-MM-dd') : '',
             });
           }
 
           if (childrenRes.ok) {
-            const childrenData = await childrenRes.json();
-            setChildren(childrenData);
+            const data = await childrenRes.json();
+            setChildren(data);
           }
 
           if (partnerRes.ok) {
-            const partnerData = await partnerRes.json();
-            setPartnerInvitation(partnerData);
+            const data = await partnerRes.json();
+            setPartnerInvitation(data);
           }
 
           if (wishlistsRes.ok) {
@@ -140,6 +152,11 @@ export default function ProfilePage() {
           if (groupsRes.ok) {
             const data = await groupsRes.json();
             setGroups(data);
+          }
+
+          if (groupInvitationsRes.ok) {
+            const data = await groupInvitationsRes.json();
+            setGroupInvitations(data);
           }
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -1016,6 +1033,108 @@ export default function ProfilePage() {
                   Créer un groupe
                 </button>
               </div>
+              
+              {/* Invitations de groupe */}
+              {groupInvitations.length > 0 && (
+                <div className="mt-4 mb-6">
+                  <h3 className="text-sm font-medium text-gray-500 mb-3">Invitations en attente</h3>
+                  <div className="space-y-3">
+                    {groupInvitations.map((invitation) => (
+                      <div
+                        key={invitation.id}
+                        className="flex items-center justify-between bg-white p-3 rounded-md border border-gray-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                            <Image
+                              src={invitation.fromUser.avatar || generateAvatarUrl(invitation.fromUser.name || '')}
+                              alt={invitation.fromUser.name || ''}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-900">
+                              <span className="font-medium">{invitation.fromUser.name}</span> vous invite à rejoindre{" "}
+                              <span className="font-medium">{invitation.groupName}</span>
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Invitation envoyée à {invitation.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/groups/invitations/reject', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ invitationId: invitation.id }),
+                                });
+
+                                if (res.ok) {
+                                  toast.success('Invitation refusée');
+                                  setGroupInvitations(prev =>
+                                    prev.filter(inv => inv.id !== invitation.id)
+                                  );
+                                } else {
+                                  toast.error('Erreur lors du refus de l\'invitation');
+                                }
+                              } catch (error) {
+                                console.error('Error:', error);
+                                toast.error('Une erreur est survenue');
+                              }
+                            }}
+                            className="p-1 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/groups/invitations/accept', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ invitationId: invitation.id }),
+                                });
+
+                                if (res.ok) {
+                                  toast.success('Invitation acceptée');
+                                  setGroupInvitations(prev =>
+                                    prev.filter(inv => inv.id !== invitation.id)
+                                  );
+                                  // Rafraîchir la liste des groupes
+                                  const groupsRes = await fetch('/api/groups');
+                                  if (groupsRes.ok) {
+                                    const data = await groupsRes.json();
+                                    setGroups(data);
+                                  }
+                                } else {
+                                  toast.error('Erreur lors de l\'acceptation de l\'invitation');
+                                }
+                              } catch (error) {
+                                console.error('Error:', error);
+                                toast.error('Une erreur est survenue');
+                              }
+                            }}
+                            className="p-1 text-black hover:text-gray-700"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Liste des groupes */}
               <div className="mt-4">
                 {isLoading ? (
                   <p className="text-gray-500">Chargement...</p>
@@ -1040,6 +1159,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
       </div>
 
       <CreateWishlistModal 

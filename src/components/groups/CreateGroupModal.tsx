@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Loader2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
 interface CreateGroupModalProps {
@@ -12,7 +11,6 @@ interface CreateGroupModalProps {
 
 export function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
   const router = useRouter();
-  const { data: session } = useSession();
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,13 +18,19 @@ export function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!name.trim()) {
+      toast.error("Le nom du groupe est requis");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/groups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name: name.trim() }),
       });
 
       if (!response.ok) {
@@ -34,6 +38,7 @@ export function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
       }
 
       const group = await response.json();
+      console.log(group);
       router.push(`/groups/${group.id}`);
       toast.success('Groupe créé avec succès');
       onClose();

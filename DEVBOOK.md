@@ -16,7 +16,7 @@
   - [x] Avatar
   - [x] Informations personnelles
   - [x] Bio/Humeur du jour
-  - [ ] Gestion des relations (couple, enfants)
+  - [x] Gestion des relations (couple, enfants)
 
 ## Dashboard Utilisateur
 - [x] Créer l'interface du dashboard

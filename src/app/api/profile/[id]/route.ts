@@ -98,7 +98,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.id !== id) {
@@ -108,17 +108,98 @@ export async function DELETE(
       );
     }
 
-    await prisma.user.delete({
-      where: {
-        id: id,
-      },
+    // Supprimer toutes les données associées à l'utilisateur
+    await prisma.$transaction(async (tx) => {
+      // Supprimer les invitations de partenaire
+      await tx.partnerInvitation.deleteMany({
+        where: {
+          OR: [
+            { fromUserId: id },
+            { toUserId: id }
+          ]
+        }
+      });
+
+      // Gérer les enfants
+      const children = await tx.child.findMany({
+        where: {
+          parents: {
+            some: {
+              id: id
+            }
+          }
+        },
+        include: {
+          parents: true
+        }
+      });
+
+      // Pour chaque enfant
+      for (const child of children) {
+        if (child.parents.length <= 1) {
+          // Si c'est le seul parent, supprimer l'enfant
+          await tx.child.delete({
+            where: {
+              id: child.id
+            }
+          });
+        } else {
+          // Sinon retirer juste la relation avec ce parent
+          await tx.child.update({
+            where: {
+              id: child.id
+            },
+            data: {
+              parents: {
+                disconnect: {
+                  id: id
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Supprimer les wishlists et leurs items
+      const wishlists = await tx.wishList.findMany({
+        where: {
+          userId: id
+        },
+        select: {
+          id: true
+        }
+      });
+
+      const wishlistIds = wishlists.map(w => w.id);
+
+      await tx.wishlistItem.deleteMany({
+        where: {
+          wishlistId: {
+            in: wishlistIds
+          }
+        }
+      });
+
+      await tx.wishList.deleteMany({
+        where: {
+          userId: id
+        }
+      });
+
+      // Supprimer l'utilisateur
+      await tx.user.delete({
+        where: {
+          id: id
+        }
+      });
     });
 
     return NextResponse.json(
-      { message: "Profile deleted successfully" },
+      { message: "Profile and associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error deleting profile:", error);
     return NextResponse.json(
       { error: "Error deleting profile" },
       { status: 500 }

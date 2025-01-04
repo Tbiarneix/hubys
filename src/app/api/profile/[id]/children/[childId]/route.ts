@@ -7,7 +7,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string; childId: string } }
 ) {
-  const { id, childId } = params;
+  const { id, childId } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.id !== id) {

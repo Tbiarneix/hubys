@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from "sonner";
+import { signOut } from "next-auth/react";
 
 interface WishList {
   id: string;
@@ -83,6 +84,9 @@ export default function ProfilePage() {
   const [isSubmittingPartner, setIsSubmittingPartner] = useState(false);
   const [partnerInvitation, setPartnerInvitation] = useState<PartnerInvitation | null>(null);
   const [partnerToRemove, setPartnerToRemove] = useState<PartnerInvitation | null>(null);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -349,6 +353,29 @@ export default function ProfilePage() {
       }
     } catch (error) {
       toast.error("Une erreur est survenue");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "SUPPRIMER" || !session?.user?.id) return;
+    
+    setIsDeletingAccount(true);
+    try {
+      const response = await fetch(`/api/profile/${session.user.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression du compte');
+      }
+
+      // Déconnexion et redirection vers la page d'accueil
+      signOut({ callbackUrl: '/' });
+    } catch (error) {
+      toast.error("Une erreur est survenue lors de la suppression du compte");
+    } finally {
+      setIsDeletingAccount(false);
+      setIsDeleteAccountModalOpen(false);
     }
   };
 
@@ -806,10 +833,18 @@ export default function ProfilePage() {
                         </Tabs.Content>
 
                         <Tabs.Content value="account" className="focus:outline-none">
-                          <AccountForm 
-                            currentEmail={userProfile?.email || ''} 
-                            userId={session?.user?.id || ''}
-                          />
+                          <AccountForm formData={formData} setFormData={setFormData} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+                          
+                          <div className="mt-8 border-t pt-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Zone de danger</h3>
+                            <button
+                              onClick={() => setIsDeleteAccountModalOpen(true)}
+                              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer mon compte
+                            </button>
+                          </div>
                         </Tabs.Content>
                       </Tabs.Root>
                     </Dialog.Content>
@@ -963,6 +998,60 @@ export default function ProfilePage() {
                   className="inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   Supprimer
+                </button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Modal de suppression de compte */}
+      <Dialog.Root open={isDeleteAccountModalOpen} onOpenChange={(open) => !open && setIsDeleteAccountModalOpen(false)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="bg-black/30 fixed inset-0 z-[60]" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white p-6 shadow-lg z-[61] focus:outline-none">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Dialog.Title className="text-xl font-semibold text-gray-900">
+                  Confirmer la suppression du compte
+                </Dialog.Title>
+                <Dialog.Description className="text-gray-500">
+                  Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et entraînera la suppression de toutes vos données.
+                </Dialog.Description>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="deleteConfirmation" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmez la suppression en écrivant "SUPPRIMER" dans le champ ci-dessous
+                </label>
+                <input
+                  type="text"
+                  id="deleteConfirmation"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <Dialog.Close asChild>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Annuler
+                  </button>
+                </Dialog.Close>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={isDeletingAccount || deleteConfirmation !== "SUPPRIMER"}
+                  className="inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  {isDeletingAccount ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    'Supprimer'
+                  )}
                 </button>
               </div>
             </div>

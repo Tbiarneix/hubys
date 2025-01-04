@@ -9,10 +9,11 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const { id } = await params
   try {
     const profile = await prisma.user.findUnique({
       where: {
-        id: params.id,
+        id: id,
       },
       select: {
         id: true,
@@ -20,6 +21,7 @@ export async function GET(
         email: true,
         avatar: true,
         bio: true,
+        birthDate: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -47,7 +49,7 @@ export async function PUT(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   { params }: { params: any }
 ) {
-  const { id } = await params
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -59,7 +61,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, bio, image } = body;
+    const { name, bio, image, birthDate } = body;
 
     const updatedProfile = await prisma.user.update({
       where: {
@@ -69,6 +71,7 @@ export async function PUT(
         name: name,
         bio: bio,
         avatar: image,
+        birthDate: birthDate ? new Date(birthDate) : null,
       },
       select: {
         id: true,
@@ -76,6 +79,7 @@ export async function PUT(
         email: true,
         avatar: true,
         bio: true,
+        birthDate: true,
         updatedAt: true,
       },
     });
@@ -94,7 +98,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const id = params.id;
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.id !== id) {
@@ -104,17 +108,98 @@ export async function DELETE(
       );
     }
 
-    await prisma.user.delete({
-      where: {
-        id: id,
-      },
+    // Supprimer toutes les données associées à l'utilisateur
+    await prisma.$transaction(async (tx) => {
+      // Supprimer les invitations de partenaire
+      await tx.partnerInvitation.deleteMany({
+        where: {
+          OR: [
+            { fromUserId: id },
+            { toUserId: id }
+          ]
+        }
+      });
+
+      // Gérer les enfants
+      const children = await tx.child.findMany({
+        where: {
+          parents: {
+            some: {
+              id: id
+            }
+          }
+        },
+        include: {
+          parents: true
+        }
+      });
+
+      // Pour chaque enfant
+      for (const child of children) {
+        if (child.parents.length <= 1) {
+          // Si c'est le seul parent, supprimer l'enfant
+          await tx.child.delete({
+            where: {
+              id: child.id
+            }
+          });
+        } else {
+          // Sinon retirer juste la relation avec ce parent
+          await tx.child.update({
+            where: {
+              id: child.id
+            },
+            data: {
+              parents: {
+                disconnect: {
+                  id: id
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Supprimer les wishlists et leurs items
+      const wishlists = await tx.wishList.findMany({
+        where: {
+          userId: id
+        },
+        select: {
+          id: true
+        }
+      });
+
+      const wishlistIds = wishlists.map(w => w.id);
+
+      await tx.wishlistItem.deleteMany({
+        where: {
+          wishlistId: {
+            in: wishlistIds
+          }
+        }
+      });
+
+      await tx.wishList.deleteMany({
+        where: {
+          userId: id
+        }
+      });
+
+      // Supprimer l'utilisateur
+      await tx.user.delete({
+        where: {
+          id: id
+        }
+      });
     });
 
     return NextResponse.json(
-      { message: "Profile deleted successfully" },
+      { message: "Profile and associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error deleting profile:", error);
     return NextResponse.json(
       { error: "Error deleting profile" },
       { status: 500 }

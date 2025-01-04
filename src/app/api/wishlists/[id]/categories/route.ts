@@ -21,13 +21,27 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -63,39 +77,49 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { name } = await request.json();
+  const { name, description } = await request.json();
 
-  if (!name) {
-    return NextResponse.json({ error: 'Name is required' }, { status: 400 });
-  }
-
-  // Get the highest order number
-  const lastCategory = await prisma.category.findFirst({
+  // Get the highest order value
+  const highestOrder = await prisma.category.findFirst({
     where: { wishlistId: params.id },
     orderBy: { order: 'desc' },
+    select: { order: true },
   });
-
-  const order = lastCategory ? lastCategory.order + 1 : 0;
 
   const category = await prisma.category.create({
     data: {
       name,
-      order,
+      description,
       wishlistId: params.id,
+      order: (highestOrder?.order || 0) + 1,
     },
   });
 
-  return NextResponse.json(category, { status: 201 });
+  return NextResponse.json(category);
 }
 
 // PATCH /api/wishlists/[id]/categories - Reorder categories
@@ -117,27 +141,41 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { categories } = await request.json();
 
-  // Update all categories in a transaction
-  await prisma.$transaction(
-    categories.map((cat: { id: string; order: number }) =>
+  // Update each category's order
+  await Promise.all(
+    categories.map((category: { id: string; order: number }) =>
       prisma.category.update({
-        where: { id: cat.id },
-        data: { order: cat.order },
+        where: { id: category.id },
+        data: { order: category.order },
       })
     )
   );
 
-  return new NextResponse(null, { status: 204 });
+  return NextResponse.json({ success: true });
 }

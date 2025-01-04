@@ -34,6 +34,12 @@ interface WishList {
   title: string;
   description: string | null;
   userId: string;
+  childId: string | null;
+  child?: {
+    id: string;
+    parents: { id: string }[];
+  };
+  editors: { id: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -71,6 +77,8 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [selectedItemToReset, setSelectedItemToReset] = useState<WishlistItem | null>(null);
+  const [selectedItemToDelete, setSelectedItemToDelete] = useState<WishlistItem | null>(null);
+  const [isDeleteItemConfirmationOpen, setIsDeleteItemConfirmationOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -80,8 +88,13 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
   );
 
   const isOwner = wishlist?.userId === session?.user?.id;
+  const isEditor = wishlist?.editors?.some(editor => editor.id === session?.user?.id);
+  const isParentOfChild = wishlist?.child && wishlist.child.parents.some(parent => parent.id === session?.user?.id) && wishlist.userId === wishlist.child.id;
+  const hasAccess = isOwner || isEditor || isParentOfChild;
 
   useEffect(() => {
+    if (status === 'loading') return;
+    if (!session) redirect('/login');
     const fetchData = async () => {
       try {
         const [wishlistRes, categoriesRes, itemsRes] = await Promise.all([
@@ -117,7 +130,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
   }, [params.id, session]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    if (!event.active || !event.over || !isOwner) return;
+    if (!event.active || !event.over || !hasAccess) return;
 
     const oldIndex = items.findIndex(item => item.id === event.active.id);
     const newIndex = items.findIndex(item => item.id === event.over?.id);
@@ -181,6 +194,11 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     }
   };
 
+  const handleDeleteItemClick = (item: WishlistItem) => {
+    setSelectedItemToDelete(item);
+    setIsDeleteItemConfirmationOpen(true);
+  };
+
   const handleDeleteItem = async (itemId: string) => {
     try {
       const response = await fetch(`/api/wishlists/${params.id}/items/${itemId}`, {
@@ -190,6 +208,8 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
       if (!response.ok) throw new Error('Failed to delete item');
 
       setItems(items.filter(item => item.id !== itemId));
+      setIsDeleteItemConfirmationOpen(false);
+      setSelectedItemToDelete(null);
     } catch (error) {
       console.error('Error deleting item:', error);
     }
@@ -263,6 +283,24 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
       ));
     } catch (err) {
       console.error('Error updating category:', err);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/wishlists/${params.id}/categories/${categoryId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete category');
+
+      setCategories(categories.filter(category => category.id !== categoryId));
+      // Mettre à jour les items pour retirer la catégorie
+      setItems(items.map(item => 
+        item.categoryId === categoryId ? { ...item, categoryId: null } : item
+      ));
+    } catch (error) {
+      console.error('Error deleting category:', error);
     }
   };
 
@@ -383,6 +421,14 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     );
   }
 
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-gray-900">Vous n'avez pas accès à cette liste</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto">
@@ -395,7 +441,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au profil
             </Link>
-            {isOwner && (
+            {hasAccess && (
               <button
                 onClick={handleDeleteClick}
                 className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
@@ -412,7 +458,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold text-black">{wishlist.title}</h1>
-                {isOwner && (
+                {hasAccess && (
                   <button
                     onClick={() => setIsEditWishlistModalOpen(true)}
                     className="p-1.5 hover:bg-gray-100 rounded-full"
@@ -426,7 +472,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
               )}
             </div>
           </div>
-          {isOwner && (
+          {hasAccess && (
             <div className="mt-4 flex justify-between">
               <div className="flex gap-3">
                 <button
@@ -471,7 +517,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-lg font-semibold text-gray-900">{category.name}</h2>
-                        {isOwner && (
+                        {hasAccess && (
                           <button
                             onClick={() => handleEditCategory(category)}
                             className="p-1.5 hover:bg-gray-100 rounded-full"
@@ -494,10 +540,10 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                         name={item.name}
                         url={item.url}
                         comment={item.comment}
-                        onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
-                        onEdit={isOwner ? () => handleEditItem(item) : undefined}
-                        onResetReservation={isOwner ? () => setSelectedItemToReset(item) : undefined}
-                        isOwner={isOwner}
+                        onDelete={hasAccess ? () => handleDeleteItemClick(item) : undefined}
+                        onEdit={hasAccess ? () => handleEditItem(item) : undefined}
+                        onResetReservation={hasAccess ? () => setSelectedItemToReset(item) : undefined}
+                        isOwner={hasAccess}
                       />
                     ))}
                 </div>
@@ -514,10 +560,10 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
                       name={item.name}
                       url={item.url}
                       comment={item.comment}
-                      onDelete={isOwner ? () => handleDeleteItem(item.id) : undefined}
-                      onEdit={isOwner ? () => handleEditItem(item) : undefined}
-                      onResetReservation={isOwner ? () => setSelectedItemToReset(item) : undefined}
-                      isOwner={isOwner}
+                      onDelete={hasAccess ? () => handleDeleteItemClick(item) : undefined}
+                      onEdit={hasAccess ? () => handleEditItem(item) : undefined}
+                      onResetReservation={hasAccess ? () => setSelectedItemToReset(item) : undefined}
+                      isOwner={hasAccess}
                     />
                   ))}
               </div>
@@ -564,6 +610,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
           setSelectedCategory(null);
         }}
         onEdit={handleSaveCategory}
+        onDelete={handleDeleteCategory}
         category={selectedCategory}
       />
 
@@ -573,6 +620,17 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
         onConfirm={handleDeleteWishlist}
         title="Supprimer la liste"
         description="Êtes-vous sûr de vouloir supprimer cette liste ? Cette action est irréversible et supprimera tous les cadeaux et catégories associés."
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteItemConfirmationOpen}
+        onClose={() => {
+          setIsDeleteItemConfirmationOpen(false);
+          setSelectedItemToDelete(null);
+        }}
+        onConfirm={() => selectedItemToDelete && handleDeleteItem(selectedItemToDelete.id)}
+        title="Supprimer le cadeau"
+        message={`Êtes-vous sûr de vouloir supprimer "${selectedItemToDelete?.name}" de la liste ? Cette action est irréversible.`}
       />
 
       {selectedItemToReset && (

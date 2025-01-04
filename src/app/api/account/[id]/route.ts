@@ -51,6 +51,7 @@ export async function PUT(
     }
 
     // Préparer les données à mettre à jour
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     // Mettre à jour l'email si fourni et différent

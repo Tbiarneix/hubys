@@ -21,14 +21,27 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  // Verify ownership
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -54,26 +67,46 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  // Verify ownership
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id && wishlist.userId === wishlist.child.id)); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { title, description } = await request.json();
 
-  if (!title) {
-    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-  }
-
   const updatedWishlist = await prisma.wishList.update({
     where: { id: params.id },
-    data: { title, description },
+    data: {
+      title,
+      description,
+    },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   return NextResponse.json(updatedWishlist);
@@ -98,14 +131,27 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  // Verify ownership
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id && wishlist.userId === wishlist.child.id)); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -113,5 +159,5 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     where: { id: params.id },
   });
 
-  return new NextResponse(null, { status: 204 });
+  return NextResponse.json({ success: true });
 }

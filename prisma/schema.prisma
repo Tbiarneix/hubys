@@ -14,16 +14,20 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  avatar    String?
-  bio       String?
-  birthDate DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  wishlists WishList[]
+  id                    String              @id @default(cuid())
+  email                 String              @unique
+  password              String
+  name                  String?
+  avatar                String?
+  bio                   String?
+  birthDate             DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  wishlists             WishList[]
+  editableWishlists     WishList[]         @relation("WishListEditors")
+  children              Child[]             @relation("ParentChild")
+  sentInvitations       PartnerInvitation[] @relation("SentInvitations")
+  receivedInvitations   PartnerInvitation[] @relation("ReceivedInvitations")
 }
 
 model WishList {
@@ -31,14 +35,18 @@ model WishList {
   publicId    String?   @unique @default(cuid())
   title       String
   description String?
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  childId     String?
+  child       Child?    @relation(fields: [childId], references: [id])
+  editors     User[]    @relation("WishListEditors")
   categories  Category[]
   items       WishlistItem[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([userId])
+  @@index([childId])
 }
 
 model Category {
@@ -72,4 +80,30 @@ model WishlistItem {
 
   @@index([wishlistId])
   @@index([categoryId])
+}
+
+model Child {
+  id          String     @id @default(cuid())
+  firstName   String
+  birthDate   DateTime
+  parents     User[]     @relation("ParentChild")
+  wishlists   WishList[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model PartnerInvitation {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   User     @relation("SentInvitations", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String?
+  toUser     User?    @relation("ReceivedInvitations", fields: [toUserId], references: [id])
+  email      String
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([email])
 }

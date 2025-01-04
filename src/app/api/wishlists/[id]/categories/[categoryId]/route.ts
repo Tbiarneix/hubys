@@ -24,13 +24,27 @@ export async function PATCH(
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -84,13 +98,27 @@ export async function DELETE(
 
   const wishlist = await prisma.wishList.findUnique({
     where: { id: params.id },
+    include: {
+      editors: true,
+      child: {
+        include: {
+          parents: true
+        }
+      }
+    }
   });
 
   if (!wishlist) {
     return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
   }
 
-  if (wishlist.userId !== user.id) {
+  // Vérifier l'accès
+  const hasAccess = 
+    wishlist.userId === user.id || // Propriétaire
+    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+  if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

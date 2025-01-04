@@ -16,6 +16,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from "sonner";
 import { signOut } from "next-auth/react";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale/fr';
 
 interface WishList {
   id: string;
@@ -851,32 +853,99 @@ export default function ProfilePage() {
                   </Dialog.Portal>
                 </Dialog.Root>
               </div>
-              <div className="flex items-center">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
-                  <Image
-                    src={userProfile?.avatar || generateAvatarUrl(userProfile?.name || '')}
-                    alt={userProfile?.name || "Avatar"}
-                    width={96}
-                    height={96}
-                    className="object-cover"
-                  />
+                {/* Informations */}
+                <div className="mt-8 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+                      <Image
+                        src={userProfile?.avatar || generateAvatarUrl(userProfile?.name || '')}
+                        alt={userProfile?.name || "Avatar"}
+                        width={96}
+                        height={96}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {userProfile?.name || "Sans nom"}
+                      </h2>
+                      <p className="text-sm text-gray-500">{userProfile?.email}</p>
+                      {userProfile?.bio && (
+                        <p className="mt-1 text-gray-600 italic">
+                          &quot;{userProfile.bio}&quot;
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {userProfile?.name || "Sans nom"}
-                  </h2>
-                  {userProfile?.birthDate && (
-                    <p className="text-sm text-gray-500">
-                      {new Date(userProfile.birthDate).toLocaleDateString('fr-FR')}
-                    </p>
+
+                {/* Relations */}
+                {(children.length > 0 || partnerInvitation?.status === 'ACCEPTED') && (                
+                <div className="mt-8 border-t pt-6 flex start">
+                  {/* Partenaire */}
+                  {partnerInvitation?.status === 'ACCEPTED' && (
+                    <div className="w-1/2">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-3">Partenaire</h2>
+                      <Link
+                        href={`/profile/${partnerInvitation.toUser?.id === session?.user?.id ? partnerInvitation.fromUser.id : partnerInvitation.toUser?.id}`}
+                        className="flex items-center gap-3 text-gray-600 hover:text-gray-900"
+                      >
+                        {partnerInvitation.toUser?.id === session?.user?.id ? (
+                          <>
+                            {partnerInvitation.fromUser.avatar && (
+                              <Image
+                                src={partnerInvitation.fromUser.avatar}
+                                alt={partnerInvitation.fromUser.name || ''}
+                                width={45}
+                                height={45}
+                                className="object-cover"
+                              />
+                            )}
+                            <span className="text-gray-900">{partnerInvitation.fromUser.name}</span>
+                          </>
+                        ) : (
+                          <>
+                            {partnerInvitation.toUser?.avatar && (
+                              <Image
+                                src={partnerInvitation.toUser.avatar}
+                                alt={partnerInvitation.toUser.name || ''}
+                                width={45}
+                                height={45}
+                                className="object-cover"
+                              />
+                            )}
+                            <span className="text-gray-900">{partnerInvitation.toUser?.name}</span>
+                          </>
+                        )}
+                      </Link>
+                  </div>
                   )}
-                  {userProfile?.bio && (
-                    <p className="mt-1 text-gray-600 italic">
-                      &quot;{userProfile.bio}&quot;
-                    </p>
+                  
+                  {/* Enfants */}
+                  {children.length > 0 && (
+                    <div className="w-1/2">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-0">Enfants</h2>
+                    <div className="space-y-3">
+                        {children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={`/children/${child.id}`}
+                            className="flex items-center justify-between p-3 rounded-lg border hover:border-gray-400 transition-colors"
+                          >
+                            <div>
+                              <h3 className="font-medium text-gray-900">{child.firstName}</h3>
+                              <p className="text-sm text-gray-500">
+                                {format(new Date(child.birthDate), 'dd MMMM yyyy', { locale: fr })}
+                              </p>
+                            </div>
+                            <div className="text-gray-400">→</div>
+                          </Link>
+                        ))}
+                      </div>
+                  </div>
                   )}
                 </div>
-              </div>
+                )}
             </div>
           </div>
         </div>

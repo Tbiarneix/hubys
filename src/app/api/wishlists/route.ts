@@ -18,8 +18,29 @@ export async function GET() {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
+  // Récupérer les listes personnelles et les listes des enfants dont l'utilisateur est parent
   const wishlists = await prisma.wishList.findMany({
-    where: { userId: user.id },
+    where: {
+      OR: [
+        { userId: user.id },
+        {
+          child: {
+            parents: {
+              some: {
+                id: user.id
+              }
+            }
+          }
+        }
+      ]
+    },
+    include: {
+      child: {
+        select: {
+          firstName: true
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -42,19 +63,54 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const { title, description } = await request.json();
+  const { title, description, childId } = await request.json();
 
   if (!title) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
 
-  const wishlist = await prisma.wishList.create({
-    data: {
-      title,
-      description,
-      userId: user.id,
-    },
-  });
+  if (childId) {
+    // Vérifier que l'utilisateur est bien parent de l'enfant
+    const child = await prisma.child.findUnique({
+      where: { id: childId },
+      include: {
+        parents: {
+          select: { id: true }
+        }
+      }
+    });
 
-  return NextResponse.json(wishlist, { status: 201 });
+    if (!child) {
+      return NextResponse.json({ error: 'Child not found' }, { status: 404 });
+    }
+
+    if (!child.parents.some(parent => parent.id === user.id)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Créer une liste pour l'enfant
+    const wishlist = await prisma.wishList.create({
+      data: {
+        title,
+        description,
+        childId,
+        editors: {
+          connect: child.parents.map(parent => ({ id: parent.id }))
+        }
+      },
+    });
+
+    return NextResponse.json(wishlist);
+  } else {
+    // Créer une liste personnelle
+    const wishlist = await prisma.wishList.create({
+      data: {
+        title,
+        description,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json(wishlist);
+  }
 }

@@ -18,17 +18,30 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return new NextResponse('User not found', { status: 404 });
     }
 
-    // Vérifier si l'utilisateur est propriétaire de la liste
+    // Vérifier si l'utilisateur a accès à la liste
     const wishlist = await prisma.wishList.findUnique({
       where: { id: params.id },
-      select: { userId: true, publicId: true }
+      include: {
+        editors: true,
+        child: {
+          include: {
+            parents: true
+          }
+        }
+      }
     });
 
     if (!wishlist) {
       return new NextResponse('Liste non trouvée', { status: 404 });
     }
 
-    if (wishlist.userId !== user.id) {
+    // Vérifier l'accès
+    const hasAccess = 
+      wishlist.userId === user.id || // Propriétaire
+      wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
+      (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+
+    if (!hasAccess) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 interface EditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit: (data: { id: string; name: string; description: string | null }) => void;
+  onDelete: (id: string) => void;
   category: {
     id: string;
     name: string;
@@ -13,10 +15,11 @@ interface EditCategoryModalProps {
   } | null;
 }
 
-export function EditCategoryModal({ isOpen, onClose, onEdit, category }: EditCategoryModalProps) {
+export function EditCategoryModal({ isOpen, onClose, onEdit, onDelete, category }: EditCategoryModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 
   useEffect(() => {
     if (category) {
@@ -43,70 +46,98 @@ export function EditCategoryModal({ isOpen, onClose, onEdit, category }: EditCat
     }
   };
 
+  const handleDelete = async () => {
+    if (!category) return;
+    await onDelete(category.id);
+    setIsDeleteConfirmationOpen(false);
+    onClose();
+  };
+
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-        <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg p-6 w-[90vw] max-w-[450px] shadow-lg z-50">
-          <div className="flex justify-between items-center mb-6">
-            <Dialog.Title className="text-xl font-semibold text-gray-700">
-              Modifier la catégorie
-            </Dialog.Title>
-            <Dialog.Close className="rounded-full p-1.5 hover:bg-gray-100">
-              <X className="h-4 w-4 text-gray-700" />
-            </Dialog.Close>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-gray-800"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description / Commentaire
-                </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-gray-800"
-                  rows={3}
-                  placeholder="Informations sur la catégorie..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {isLoading ? 'Modification...' : 'Modifier'}
-                </button>
-              </div>
+    <>
+      <Dialog.Root open={isOpen} onOpenChange={onClose}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg p-6 w-[90vw] max-w-[450px] shadow-lg z-50">
+            <div className="flex justify-between items-center mb-6">
+              <Dialog.Title className="text-xl font-semibold text-gray-700">
+                Modifier la catégorie
+              </Dialog.Title>
+              <Dialog.Close className="rounded-full p-1.5 hover:bg-gray-100">
+                <X className="h-4 w-4 text-gray-700" />
+              </Dialog.Close>
             </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-gray-800"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description / Commentaire
+                  </label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-gray-800"
+                    rows={3}
+                    placeholder="Informations sur la catégorie..."
+                  />
+                </div>
+
+                <div className="flex justify-between items-center mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteConfirmationOpen(true)}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer
+                  </button>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Enregistrement...' : 'Enregistrer'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteConfirmationOpen}
+        onClose={() => setIsDeleteConfirmationOpen(false)}
+        onConfirm={handleDelete}
+        title="Supprimer la catégorie"
+        message="Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible et supprimera tous les items de la catégorie."
+      />
+    </>
   );
 }

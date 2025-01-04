@@ -8,6 +8,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useState, useEffect } from 'react';
 import { CreateWishlistModal } from '@/components/wishlists/CreateWishlistModal';
+import { CreateGroupModal } from '@/components/groups/CreateGroupModal';
 import { ImageUpload } from '@/components/ImageUpload';
 import { AccountForm } from '@/components/profile/AccountForm';
 import { generateAvatarUrl } from '@/utils/avatar';
@@ -22,6 +23,12 @@ import { fr } from 'date-fns/locale/fr';
 interface WishList {
   id: string;
   title: string;
+  createdAt: string;
+}
+
+interface Group {
+  id: string;
+  name: string;
   createdAt: string;
 }
 
@@ -67,7 +74,9 @@ export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [wishlists, setWishlists] = useState<WishList[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -94,11 +103,12 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       if (session?.user?.id) {
         try {
-          const [profileRes, childrenRes, partnerRes, wishlistsRes] = await Promise.all([
+          const [profileRes, childrenRes, partnerRes, wishlistsRes, groupsRes] = await Promise.all([
             fetch(`/api/profile/${session.user.id}`),
             fetch(`/api/profile/${session.user.id}/children`),
             fetch(`/api/profile/${session.user.id}/partner`),
-            fetch('/api/wishlists')
+            fetch('/api/wishlists'),
+            fetch('/api/groups')
           ]);
           
           if (profileRes.ok) {
@@ -125,6 +135,11 @@ export default function ProfilePage() {
           if (wishlistsRes.ok) {
             const data = await wishlistsRes.json();
             setWishlists(data);
+          }
+
+          if (groupsRes.ok) {
+            const data = await groupsRes.json();
+            setGroups(data);
           }
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -987,11 +1002,54 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-black">Groupe</h2>
+                <button 
+                  onClick={() => setIsGroupModalOpen(true)}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un groupe
+                </button>
+              </div>
+              <div className="mt-4">
+                {isLoading ? (
+                  <p className="text-gray-500">Chargement...</p>
+                ) : groups.length === 0 ? (
+                  <p className="text-gray-500 italic">Pas de groupe</p>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {groups.map((group) => (
+                      <div key={group.id} className="flex justify-between items-center py-4">
+                        <span className="text-gray-800">{group.name}</span>
+                        <Link
+                          href={`/groups/${group.id}`}
+                          className="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                          Accéder au groupe
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <CreateWishlistModal 
         isOpen={isWishlistModalOpen}
         onClose={() => setIsWishlistModalOpen(false)}
+      />
+
+      <CreateGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
       />
 
       {/* Modal de confirmation de suppression */}

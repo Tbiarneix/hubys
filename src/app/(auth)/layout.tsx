@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hubidays - Connexion",
-  description: "Connectez-vous à Hubidays",
+  title: "Hubilys - Connexion",
+  description: "Connectez-vous à Hubilys",
 };
 
 export default function AuthLayout({

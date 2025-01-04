@@ -5,7 +5,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5433/hubidays
+      - DATABASE_URL=postgresql://postgres:postgres@db:5433/Hubilys
       - NODE_ENV=development
     depends_on:
       - db
@@ -20,7 +20,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=hubidays
+      - POSTGRES_DB=Hubilys
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

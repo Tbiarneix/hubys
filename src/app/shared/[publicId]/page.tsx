@@ -147,7 +147,7 @@ export default function SharedWishlistPage(props: { params: Promise<{ publicId: 
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
             <Gift className="h-4 w-4 mr-2" />
-            Une liste créée avec Hubidays, vous aussi créez la vôtre !
+            Une liste créée avec Hubilys, vous aussi créez la vôtre !
           </Link>
         </div>
 

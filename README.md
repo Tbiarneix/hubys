@@ -1,4 +1,4 @@
-# Hubidays
+# Hubilys
 
 Application de gestion familiale construite avec Next.js, GraphQL, Prisma et PostgreSQL.
 
@@ -13,7 +13,7 @@ Application de gestion familiale construite avec Next.js, GraphQL, Prisma et Pos
 1. Cloner le repository :
 ```bash
 git clone <repository-url>
-cd hubidays
+cd Hubilys
 ```
 
 2. Installer les dépendances :
@@ -24,7 +24,7 @@ npm install
 3. Configuration de l'environnement :
 Créer un fichier `.env` à la racine du projet avec les variables suivantes :
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/hubidays"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/Hubilys"
 JWT_SECRET="votre_secret_jwt"
 NEXTAUTH_URL="http://localhost:3000"
 ```
@@ -53,7 +53,7 @@ L'application sera accessible à :
 ## Structure du projet
 
 ```
-hubidays/
+Hubilys/
 ├── src/
 │   ├── app/              # Routes et composants Next.js
 │   ├── graphql/

@@ -7,10 +7,10 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 // GET /api/profile/[id]
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params
   try {
+    const { id } = context.params;
     const profile = await prisma.user.findUnique({
       where: {
         id: id,
@@ -46,11 +46,10 @@ export async function GET(
 // PUT /api/profile/[id]
 export async function PUT(
   request: Request,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { params }: { params: any }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
+    const { id } = context.params;
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.id !== id) {
@@ -96,11 +95,20 @@ export async function PUT(
 // DELETE /api/profile/[id]
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
+    // Vérifier que l'ID est présent
+    if (!context?.params?.id) {
+      return NextResponse.json(
+        { error: "ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const id = context.params.id;
     const session = await getServerSession(authOptions);
+    
     if (!session || session.user.id !== id) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -108,9 +116,47 @@ export async function DELETE(
       );
     }
 
+    // Vérifier que l'utilisateur existe
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        groupMemberships: true,
+        groupMessages: true,
+        groupDeletionVotes: true,
+        sentGroupInvitations: true,
+      }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
     // Supprimer toutes les données associées à l'utilisateur
-    await prisma.$transaction(async (tx) => {
-      // Supprimer les invitations de partenaire
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Supprimer les appartenances aux groupes
+      await tx.groupMember.deleteMany({
+        where: { userId: id }
+      });
+
+      // 2. Supprimer les messages de groupe
+      await tx.groupMessage.deleteMany({
+        where: { userId: id }
+      });
+
+      // 3. Supprimer les votes de suppression de groupe
+      await tx.groupDeletionVote.deleteMany({
+        where: { userId: id }
+      });
+
+      // 4. Supprimer les invitations de groupe
+      await tx.groupInvitation.deleteMany({
+        where: { fromUserId: id }
+      });
+
+      // 5. Supprimer les invitations de partenaire
       await tx.partnerInvitation.deleteMany({
         where: {
           OR: [
@@ -120,79 +166,89 @@ export async function DELETE(
         }
       });
 
-      // Gérer les enfants
+      // 6. Gérer les enfants
       const children = await tx.child.findMany({
         where: {
           parents: {
-            some: {
-              id: id
-            }
+            some: { id }
           }
         },
         include: {
-          parents: true
+          parents: true,
+          wishlists: {
+            include: {
+              items: true,
+              categories: true
+            }
+          }
         }
       });
 
-      // Pour chaque enfant
       for (const child of children) {
         if (child.parents.length <= 1) {
-          // Si c'est le seul parent, supprimer l'enfant
+          // Supprimer d'abord les items et catégories des wishlists
+          for (const wishlist of child.wishlists) {
+            await tx.wishlistItem.deleteMany({
+              where: { wishlistId: wishlist.id }
+            });
+            await tx.category.deleteMany({
+              where: { wishlistId: wishlist.id }
+            });
+          }
+          
+          // Puis supprimer les wishlists
+          await tx.wishList.deleteMany({
+            where: { childId: child.id }
+          });
+          
+          // Enfin supprimer l'enfant
           await tx.child.delete({
-            where: {
-              id: child.id
-            }
+            where: { id: child.id }
           });
         } else {
           // Sinon retirer juste la relation avec ce parent
           await tx.child.update({
-            where: {
-              id: child.id
-            },
+            where: { id: child.id },
             data: {
               parents: {
-                disconnect: {
-                  id: id
-                }
+                disconnect: { id }
               }
             }
           });
         }
       }
 
-      // Supprimer les wishlists et leurs items
-      const wishlists = await tx.wishList.findMany({
-        where: {
-          userId: id
-        },
-        select: {
-          id: true
+      // 7. Supprimer les wishlists de l'utilisateur
+      const userWishlists = await tx.wishList.findMany({
+        where: { userId: id },
+        include: {
+          items: true,
+          categories: true
         }
       });
 
-      const wishlistIds = wishlists.map(w => w.id);
-
-      await tx.wishlistItem.deleteMany({
-        where: {
-          wishlistId: {
-            in: wishlistIds
-          }
-        }
-      });
+      for (const wishlist of userWishlists) {
+        await tx.wishlistItem.deleteMany({
+          where: { wishlistId: wishlist.id }
+        });
+        await tx.category.deleteMany({
+          where: { wishlistId: wishlist.id }
+        });
+      }
 
       await tx.wishList.deleteMany({
-        where: {
-          userId: id
-        }
+        where: { userId: id }
       });
 
-      // Supprimer l'utilisateur
-      await tx.user.delete({
-        where: {
-          id: id
-        }
+      // 8. Finalement, supprimer l'utilisateur
+      return await tx.user.delete({
+        where: { id }
       });
     });
+
+    if (!result) {
+      throw new Error("Failed to delete user");
+    }
 
     return NextResponse.json(
       { message: "Profile and associated data deleted successfully" },

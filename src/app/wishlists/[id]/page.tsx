@@ -89,7 +89,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
 
   const isOwner = wishlist?.userId === session?.user?.id;
   const isEditor = wishlist?.editors?.some(editor => editor.id === session?.user?.id);
-  const isParentOfChild = wishlist?.child && wishlist.child.parents.some(parent => parent.id === session?.user?.id) && wishlist.userId === wishlist.child.id;
+  const isParentOfChild = wishlist?.childId && wishlist?.child?.parents.some(parent => parent.id === session?.user?.id);
   const hasAccess = isOwner || isEditor || isParentOfChild;
 
   useEffect(() => {

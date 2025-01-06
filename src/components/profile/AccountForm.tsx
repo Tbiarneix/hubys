@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,8 +25,18 @@ export function AccountForm({ currentEmail, userId }: AccountFormProps) {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    email: currentEmail,
+    email: currentEmail || '',
   });
+
+  // Mettre à jour l'email quand currentEmail change
+  useEffect(() => {
+    if (currentEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: currentEmail
+      }));
+    }
+  }, [currentEmail]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

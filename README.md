@@ -41,7 +41,12 @@ docker-compose up -d
 npx prisma migrate dev
 ```
 
-3. Lancer l'application en mode développement :
+3. Appliquer le seed Prisma :
+```bash
+npx prisma db seed
+```
+
+4. Lancer l'application en mode développement :
 ```bash
 npm run dev
 ```

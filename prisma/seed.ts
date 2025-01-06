@@ -72,6 +72,26 @@ async function main() {
 
   // Set up family relationships
   // First couple with 2 children
+  await prisma.partnerInvitation.create({
+    data: {
+      fromUserId: adults[0].id,
+      toUserId: adults[1].id,
+      email: `test-2@example.com`,
+      status: 'ACCEPTED'
+    }
+  });
+
+  // Second couple
+  await prisma.partnerInvitation.create({
+    data: {
+      fromUserId: adults[2].id,
+      toUserId: adults[3].id,
+      email: `test-4@example.com`,
+      status: 'ACCEPTED'
+    }
+  });
+
+  // First couple with 2 children
   await prisma.child.update({
     where: { id: children[0].id },
     data: { parents: { connect: [{ id: adults[0].id }, { id: adults[1].id }] } }

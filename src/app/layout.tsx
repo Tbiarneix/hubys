@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Hubilys",
-  description: "Hubilys - Votre réseau social",
+  description: "Hubilys - Gestionnaire d'événement convivial",
 };
 
 export default function RootLayout({

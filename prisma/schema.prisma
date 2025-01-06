@@ -26,6 +26,8 @@ model User {
   wishlists            WishList[]
   children             Child[]             @relation("ParentChild")
   editableWishlists    WishList[]          @relation("WishListEditors")
+  giverAssignments     SecretSantaAssignment[] @relation("GiverAssignments")
+  receiverAssignments  SecretSantaAssignment[] @relation("ReceiverAssignments")
 }
 
 model WishList {
@@ -115,6 +117,7 @@ model Group {
   invitations   GroupInvitation[]
   members       GroupMember[]
   messages      GroupMessage[]
+  secretSantas  SecretSanta[]
 }
 
 model GroupMember {
@@ -174,4 +177,34 @@ model GroupDeletionVote {
   @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
+}
+
+model SecretSanta {
+  id        String                 @id @default(cuid())
+  year      Int
+  groupId   String
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  group     Group                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  assignments SecretSantaAssignment[]
+
+  @@unique([groupId, year])
+  @@index([groupId])
+}
+
+model SecretSantaAssignment {
+  id            String      @id @default(cuid())
+  secretSantaId String
+  giverId       String
+  receiverId    String
+  createdAt     DateTime    @default(now())
+  secretSanta   SecretSanta @relation(fields: [secretSantaId], references: [id], onDelete: Cascade)
+  giver         User        @relation("GiverAssignments", fields: [giverId], references: [id])
+  receiver      User        @relation("ReceiverAssignments", fields: [receiverId], references: [id])
+
+  @@unique([secretSantaId, giverId])
+  @@unique([secretSantaId, receiverId])
+  @@index([secretSantaId])
+  @@index([giverId])
+  @@index([receiverId])
 }

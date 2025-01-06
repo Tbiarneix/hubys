@@ -45,6 +45,11 @@ npx prisma migrate dev
 ```bash
 npx prisma db seed
 ```
+(Pour reset la bdd :
+```bash
+npx prisma db push --force-reset
+```
+)
 
 4. Lancer l'application en mode développement :
 ```bash

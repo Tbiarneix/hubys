@@ -35,6 +35,26 @@ export interface GroupMessage {
   };
 }
 
+export interface SecretSanta {
+  id: string;
+  year: number;
+  groupId: string;
+  createdAt: string;
+  assignments: SecretSantaAssignment[];
+}
+
+export interface SecretSantaAssignment {
+  id: string;
+  secretSantaId: string;
+  giverId: string;
+  receiverId: string;
+  createdAt: string;
+  receiver: {
+    id: string;
+    name: string;
+  };
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -42,5 +62,6 @@ export interface Group {
   members: GroupMember[];
   invitations: GroupInvitation[];
   messages: GroupMessage[];
-  deletionVotes: string[]; // Array of userIds who voted for deletion
+  deletionVotes: string[];
+  secretSantas?: SecretSanta[];
 }

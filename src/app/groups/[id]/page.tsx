@@ -14,6 +14,7 @@ import { fr } from 'date-fns/locale/fr';
 import { InviteModal } from '@/components/groups/InviteModal';
 import { DeleteGroupModal } from '@/components/groups/DeleteGroupModal';
 import { DeleteMessageModal } from '@/components/groups/DeleteMessageModal';
+import SecretSantaCard from '@/components/groups/SecretSantaCard';
 
 export default function GroupPage({ params }: { params: { id: string } }) {
   const id = use(params).id;
@@ -25,21 +26,32 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  const [secretSanta, setSecretSanta] = useState<any>(null);
 
   useEffect(() => {
     const fetchGroup = async () => {
       if (!session?.user?.id) return;
 
       try {
-        const response = await fetch(`/api/groups/${id}`);
-        if (!response.ok) {
+        const [groupResponse, secretSantaResponse] = await Promise.all([
+          fetch(`/api/groups/${id}`),
+          fetch(`/api/groups/${id}/secret-santa`),
+        ]);
+
+        if (!groupResponse.ok) {
           throw new Error('Failed to fetch group');
         }
-        const data = await response.json();
-        setGroup(data);
+
+        const [groupData, secretSantaData] = await Promise.all([
+          groupResponse.json(),
+          secretSantaResponse.ok ? secretSantaResponse.json() : null,
+        ]);
+
+        setGroup(groupData);
+        setSecretSanta(secretSantaData);
       } catch (error) {
-        console.error('Error fetching group:', error);
-        toast.error('Erreur lors du chargement du groupe');
+        console.error('Error fetching data:', error);
+        toast.error('Erreur lors du chargement des données');
         router.push('/profile');
       } finally {
         setIsLoading(false);
@@ -101,6 +113,53 @@ export default function GroupPage({ params }: { params: { id: string } }) {
     } catch (error) {
       console.error('Error deleting message:', error);
       toast.error('Erreur lors de la suppression du message');
+    }
+  };
+
+  const handleLaunchSecretSanta = async () => {
+    try {
+      const response = await fetch(`/api/groups/${id}/secret-santa`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to launch Secret Santa');
+      }
+
+      const data = await response.json();
+      setSecretSanta(data);
+      toast.success('Secret Santa lancé avec succès !');
+    } catch (error) {
+      console.error('Error launching Secret Santa:', error);
+      throw error;
+    }
+  };
+
+  const handleRelaunchSecretSanta = async () => {
+    try {
+      await handleCancelSecretSanta();
+      await handleLaunchSecretSanta();
+    } catch (error) {
+      console.error('Error relaunching Secret Santa:', error);
+      throw error;
+    }
+  };
+
+  const handleCancelSecretSanta = async () => {
+    try {
+      const response = await fetch(`/api/groups/${id}/secret-santa`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel Secret Santa');
+      }
+
+      setSecretSanta(null);
+      toast.success('Secret Santa annulé');
+    } catch (error) {
+      console.error('Error canceling Secret Santa:', error);
+      throw error;
     }
   };
 
@@ -176,6 +235,17 @@ export default function GroupPage({ params }: { params: { id: string } }) {
                     </div>
                   </Link>
                 ))}
+                <div className="col-span-full mb-6">
+                <SecretSantaCard
+                  groupId={id}
+                  groupName={group.name}
+                  currentUserId={session?.user?.id || ''}
+                  secretSanta={secretSanta}
+                  onLaunch={handleLaunchSecretSanta}
+                  onRelaunch={handleRelaunchSecretSanta}
+                  onCancel={handleCancelSecretSanta}
+                />
+              </div>
             </div>
           </div>
         </div>

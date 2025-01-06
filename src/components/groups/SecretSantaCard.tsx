@@ -53,7 +53,7 @@ export default function SecretSantaCard({
             <Gift className="h-5 w-5" />
             Secret Santa {secretSanta?.year || currentYear}
           </h2>
-        <div className="p-6">
+        <div className="pb-6 px-6">
           {!secretSanta ? (
             <div>
               <p className="text-gray-600 mb-4">

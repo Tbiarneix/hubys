@@ -1,10 +1,16 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
+import { Plus } from "lucide-react";
 import { CreateEventModal } from "./CreateEventModal";
 import { useState } from "react";
 
-export default function EventCard({groupId}: {groupId: string}) {                                                                                                                                                       
+
+interface EventCardProps {
+  groupId: string;
+}
+
+export default function EventCard({groupId}: EventCardProps) {                                                                                                                                                       
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   return (
     <>
@@ -15,6 +21,7 @@ export default function EventCard({groupId}: {groupId: string}) {
           onClick={() => setShowCreateEventModal(true)}
           className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
         >
+          <Plus className="h-4 w-4 mr-2" />
           Créer un événement
         </button>
       </div>

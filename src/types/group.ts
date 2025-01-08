@@ -27,7 +27,7 @@ export interface GroupMessage {
   userId: string;
   content: string;
   createdAt: string;
-  isDeleted?: boolean;
+  isDeleted: boolean;
   user: {
     id: string;
     name: string;

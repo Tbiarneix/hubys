@@ -29,7 +29,7 @@ export default function SecretSantaModal({
     try {
       setIsLoading(true);
       await onConfirm();
-      toast.success(isRelaunch ? "Secret Santa relancé !" : "Secret Santa créé !");
+      toast.success(isRelaunch ? "Secret Santa relancé !" : 'Secret Santa lancé avec succès !');
       onClose();
     } catch (error) {
       toast.error("Une erreur est survenue lors de la création du Secret Santa.");

@@ -72,7 +72,6 @@ export default function GroupPage({ params }: { params: { id: string } }) {
 
       const data = await response.json();
       setSecretSanta(data);
-      toast.success('Secret Santa lancé avec succès !');
     } catch (error) {
       console.error('Error launching Secret Santa:', error);
       throw error;

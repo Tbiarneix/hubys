@@ -15,6 +15,7 @@ import { InviteModal } from '@/components/groups/InviteModal';
 import { DeleteGroupModal } from '@/components/groups/DeleteGroupModal';
 import { DeleteMessageModal } from '@/components/groups/DeleteMessageModal';
 import SecretSantaCard from '@/components/groups/SecretSantaCard';
+import EventCard from '@/components/groups/EventCard';
 
 export default function GroupPage({ params }: { params: { id: string } }) {
   const id = use(params).id;
@@ -25,6 +26,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [newMessage, setNewMessage] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [secretSanta, setSecretSanta] = useState<any>(null);
 
@@ -235,6 +237,9 @@ export default function GroupPage({ params }: { params: { id: string } }) {
                     </div>
                   </Link>
                 ))}
+              <div className="col-span-full mb-6">
+                <EventCard groupId={id} />
+              </div>
                 <div className="col-span-full mb-6">
                 <SecretSantaCard
                   groupId={id}
@@ -331,6 +336,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         groupId={id}
+        groupName={group.name}
         hasVoted={hasVotedForDeletion}
         votePercentage={deleteVotePercentage}
       />
@@ -340,6 +346,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
         onConfirm={() => {
           if (messageToDelete) {
             handleDeleteMessage(messageToDelete);
+            setMessageToDelete(null);
           }
         }}
       />

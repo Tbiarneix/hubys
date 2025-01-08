@@ -101,7 +101,7 @@ export default function SecretSantaCard({
                         {assignment.receiver.name}
                       </span>
                     ) : (
-                      <span className="ml-2 h-4 bg-black text-black">
+                      <span className="ml-2 h-4 bg-black text-xl font-bold text-black">
                         {assignment.receiver.name}
                       </span>
                     )}

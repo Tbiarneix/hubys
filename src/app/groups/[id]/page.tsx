@@ -15,9 +15,7 @@ import { InviteModal } from '@/components/groups/InviteModal';
 import { DeleteGroupModal } from '@/components/groups/DeleteGroupModal';
 import SecretSantaCard from '@/components/groups/SecretSantaCard';
 import EventCard from '@/components/groups/EventCard';
-import EventList from '@/components/groups/EventList';
 import { ChatSidebar } from '@/components/groups/ChatSidebar';
-import { Plus } from 'lucide-react';
 
 export default function GroupPage({ params }: { params: { id: string } }) {
   const id = use(params).id;
@@ -28,7 +26,6 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [secretSanta, setSecretSanta] = useState<SecretSanta | null>(null);
-  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {

@@ -11,6 +11,8 @@ interface Event {
   id: string;
   name: string;
   createdAt: string;
+  startDate: string;
+  endDate: string;
   hasLocation: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
@@ -83,7 +85,7 @@ export default function EventList({ groupId }: EventListProps) {
                 {event.name}
               </h3>
               <p className="text-sm text-gray-500 mb-4">
-                Créé le {format(new Date(event.createdAt), "dd MMMM yyyy", { locale: fr })}
+                Du {format(new Date(event.startDate), "dd/MM/yy", { locale: fr })} au {format(new Date(event.endDate), "dd/MM/yy", { locale: fr })}
               </p>
             </div>
             <Calendar className="h-5 w-5 text-gray-400" />

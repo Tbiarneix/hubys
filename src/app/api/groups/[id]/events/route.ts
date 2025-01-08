@@ -33,7 +33,7 @@ export async function GET(
         groupId: params.id,
       },
       orderBy: {
-        createdAt: 'desc',
+        startDate: 'desc',
       },
     });
 
@@ -57,7 +57,14 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, options } = await request.json();
+    const { name, options, startDate, endDate } = await request.json();
+
+    if (!name || !startDate || !endDate) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
 
     // Vérifier si l'utilisateur est membre du groupe
     const member = await prisma.groupMember.findFirst({
@@ -78,6 +85,8 @@ export async function POST(
       data: {
         name,
         groupId: params.id,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
         hasLocation: options?.location ?? true,
         hasCalendar: options?.calendar ?? true,
         hasMenus: options?.menus ?? true,

@@ -27,7 +27,6 @@ interface SecretSantaCardProps {
 }
 
 export default function SecretSantaCard({
-  groupId,
   groupName,
   currentUserId,
   secretSanta,
@@ -97,8 +96,12 @@ export default function SecretSantaCard({
                   <div className='flex justify-between items-center'>
                     <p className="mb-2 text-gray-600">
                       Votre Secret Santa pour {secretSanta.year}:
-                    {showResult && (
+                    {showResult ? (
                       <span className="ml-2 text-xl font-bold text-gray-800">
+                        {assignment.receiver.name}
+                      </span>
+                    ) : (
+                      <span className="ml-2 h-4 bg-black text-black">
                         {assignment.receiver.name}
                       </span>
                     )}
@@ -138,7 +141,6 @@ export default function SecretSantaCard({
         onClose={() => setIsLaunchModalOpen(false)}
         onConfirm={onLaunch}
         isRelaunch={false}
-        groupId={groupId}
       />
       <SecretSantaModal
         groupName={groupName}
@@ -146,7 +148,6 @@ export default function SecretSantaCard({
         onClose={() => setIsRelaunchModalOpen(false)}
         onConfirm={onRelaunch}
         isRelaunch={true}
-        groupId={groupId}
 />
       <CancelSecretSantaModal
         groupName={groupName}

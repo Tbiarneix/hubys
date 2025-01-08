@@ -13,6 +13,8 @@ interface CreateEventModalProps {
 
 export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalProps) {
   const [name, setName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
   const [options, setOptions] = useState({
@@ -27,7 +29,12 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || isCreating) return;
+    if (!name.trim() || !startDate || !endDate || isCreating) return;
+
+    if (new Date(startDate) > new Date(endDate)) {
+      toast.error("La date de début doit être antérieure à la date de fin");
+      return;
+    }
 
     try {
       setIsCreating(true);
@@ -37,7 +44,9 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name, // Updated to use the state variable 'name'
+          name: name,
+          startDate: new Date(startDate + 'T00:00:00').toISOString(),
+          endDate: new Date(endDate + 'T23:59:59').toISOString(),
           options,
         }),
       });
@@ -53,6 +62,7 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
       router.push(`/groups/${groupId}/events/${event.id}`);
     } catch (error) {
       console.error('Error creating event:', error);
+      toast.error("Erreur lors de la création de l'événement");
     } finally {
       setIsCreating(false);
     }
@@ -100,6 +110,36 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                  Date de début
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                  Date de fin
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black sm:text-sm"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-gray-700">Options</h3>
               
@@ -135,7 +175,7 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
               </button>
               <button
                 type="submit"
-                disabled={isCreating || !name.trim()}
+                disabled={isCreating || !name.trim() || !startDate || !endDate}
                 className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? 'Création...' : 'Créer'}

@@ -15,7 +15,9 @@ import { InviteModal } from '@/components/groups/InviteModal';
 import { DeleteGroupModal } from '@/components/groups/DeleteGroupModal';
 import SecretSantaCard from '@/components/groups/SecretSantaCard';
 import EventCard from '@/components/groups/EventCard';
+import EventList from '@/components/groups/EventList';
 import { ChatSidebar } from '@/components/groups/ChatSidebar';
+import { Plus } from 'lucide-react';
 
 export default function GroupPage({ params }: { params: { id: string } }) {
   const id = use(params).id;
@@ -26,6 +28,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [secretSanta, setSecretSanta] = useState<SecretSanta | null>(null);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -199,20 +202,22 @@ export default function GroupPage({ params }: { params: { id: string } }) {
                     </div>
                   </Link>
                 ))}
-              <div className="col-span-full mb-6">
-                <EventCard groupId={id} />
-              </div>
-              <div className="col-span-full mb-6">
-                <SecretSantaCard
-                  groupId={id}
-                  groupName={group.name}
-                  currentUserId={session?.user?.id || ''}
-                  secretSanta={secretSanta}
-                  onLaunch={handleLaunchSecretSanta}
-                  onRelaunch={handleRelaunchSecretSanta}
-                  onCancel={handleCancelSecretSanta}
-                />
-              </div>
+            </div>
+
+            {/* Events section */}
+            <div className="col-span-full mb-6">
+              <EventCard id={id} />
+            </div>
+            <div className="col-span-full mb-6">
+              <SecretSantaCard
+                groupId={id}
+                groupName={group.name}
+                currentUserId={session?.user?.id || ''}
+                secretSanta={secretSanta}
+                onLaunch={handleLaunchSecretSanta}
+                onRelaunch={handleRelaunchSecretSanta}
+                onCancel={handleCancelSecretSanta}
+              />
             </div>
           </div>
         </div>

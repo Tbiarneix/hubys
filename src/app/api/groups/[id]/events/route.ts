@@ -3,6 +3,50 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Vérifier si l'utilisateur est membre du groupe
+    const member = await prisma.groupMember.findFirst({
+      where: {
+        groupId: params.id,
+        userId: session.user.id,
+      },
+    });
+
+    if (!member) {
+      return NextResponse.json(
+        { error: "Not a member of this group" },
+        { status: 403 }
+      );
+    }
+
+    const events = await prisma.event.findMany({
+      where: {
+        groupId: params.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return NextResponse.json(events);
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch events" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

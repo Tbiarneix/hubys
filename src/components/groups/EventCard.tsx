@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 import { CreateEventModal } from "./CreateEventModal";
+import EventList from "./EventList";
 
 interface EventCardProps {
-  groupId: string;
+  id: string;
 }
 
-export default function EventCard({ groupId }: EventCardProps) {
+export default function EventCard({ id }: EventCardProps) {
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   return (
@@ -27,13 +28,13 @@ export default function EventCard({ groupId }: EventCardProps) {
             Créer un événement
           </button>
         </div>
-        <p className="text-sm text-gray-500">Aucun événement actuellement</p>
+				<EventList groupId={id} />
       </div>
 
       <CreateEventModal
         isOpen={showCreateEventModal}
         onClose={() => setShowCreateEventModal(false)}
-        groupId={groupId}
+        groupId={id}
       />
     </>
   );

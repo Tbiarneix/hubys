@@ -23,12 +23,8 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/groups/${groupId}/events`, {
+      const response = await fetch(`/api/events/${event.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ eventId: event.id }),
       });
 
       if (!response.ok) {

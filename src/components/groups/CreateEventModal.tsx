@@ -3,6 +3,7 @@ import { Dialog, Switch } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -36,14 +37,8 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
-          hasLocation: options.location,
-          hasCalendar: options.calendar,
-          hasMenus: options.menus,
-          hasShopping: options.shopping,
-          hasActivities: options.activities,
-          hasPhotos: options.photos,
-          hasAccounts: options.accounts,
+          name: name, // Updated to use the state variable 'name'
+          options,
         }),
       });
 
@@ -52,6 +47,7 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
       }
 
       const event = await response.json();
+      toast.success("Événement créé avec succès");
       router.refresh();
       onClose();
       router.push(`/groups/${groupId}/events/${event.id}`);

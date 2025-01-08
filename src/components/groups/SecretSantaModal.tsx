@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 interface SecretSantaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  groupId: string;
   groupName: string;
   onConfirm: () => Promise<void>;
   isRelaunch?: boolean;
@@ -17,7 +16,6 @@ interface SecretSantaModalProps {
 export default function SecretSantaModal({
   isOpen,
   onClose,
-  groupId,
   groupName,
   onConfirm,
   isRelaunch = false,
@@ -29,9 +27,10 @@ export default function SecretSantaModal({
     try {
       setIsLoading(true);
       await onConfirm();
-      toast.success(isRelaunch ? "Secret Santa relancé !" : "Secret Santa créé !");
+      toast.success(isRelaunch ? "Secret Santa relancé !" : 'Secret Santa lancé avec succès !');
       onClose();
     } catch (error) {
+      console.error(error);
       toast.error("Une erreur est survenue lors de la création du Secret Santa.");
     } finally {
       setIsLoading(false);

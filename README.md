@@ -41,7 +41,7 @@ docker-compose up -d
 npx prisma migrate dev
 ```
 
-3. Appliquer le seed Prisma :
+3. Appliquer le seed Prisma si besoin (normalement pas besoin) :
 ```bash
 npx prisma db seed
 ```

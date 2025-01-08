@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
-import { Group } from '@/types/group';
+import { Group, SecretSanta } from '@/types/group';
 import Image from 'next/image';
 import Link from 'next/link';
 import { generateAvatarUrl } from '@/utils/avatar';
@@ -25,7 +25,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [secretSanta, setSecretSanta] = useState<any>(null);
+  const [secretSanta, setSecretSanta] = useState<SecretSanta | null>(null);
 
   useEffect(() => {
     const fetchGroup = async () => {

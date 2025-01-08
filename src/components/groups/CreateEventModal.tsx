@@ -1,6 +1,8 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Dialog, Switch } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -9,7 +11,9 @@ interface CreateEventModalProps {
 }
 
 export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalProps) {
-  const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
   const [options, setOptions] = useState({
     location: true,
     calendar: true,
@@ -22,8 +26,50 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement event creation
-    onClose();
+    if (!name.trim() || isCreating) return;
+
+    try {
+      setIsCreating(true);
+      const response = await fetch(`/api/groups/${groupId}/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          hasLocation: options.location,
+          hasCalendar: options.calendar,
+          hasMenus: options.menus,
+          hasShopping: options.shopping,
+          hasActivities: options.activities,
+          hasPhotos: options.photos,
+          hasAccounts: options.accounts,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      const event = await response.json();
+      router.refresh();
+      onClose();
+      router.push(`/groups/${groupId}/events/${event.id}`);
+    } catch (error) {
+      console.error('Error creating event:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const optionLabels: Record<string, string> = {
+    location: 'Location',
+    calendar: 'Calendrier des présences',
+    menus: 'Menus',
+    shopping: 'Liste de courses',
+    activities: 'Activités',
+    photos: 'Album photo',
+    accounts: 'Comptes',
   };
 
   return (
@@ -45,14 +91,14 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Titre
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Nom de l'événement
               </label>
               <input
                 type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black sm:text-sm"
                 required
               />
@@ -63,14 +109,8 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
               
               {Object.entries(options).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 capitalize">
-                    {key === 'calendar' ? 'Calendrier des présences' : 
-                     key === 'shopping' ? 'Liste de courses' :
-                     key === 'photos' ? 'Album photo' :
-                     key === 'location' ? 'Location' :
-                     key === 'menus' ? 'Menus' :
-                     key === 'activities' ? 'Activités' :
-                     key === 'accounts' ? 'Comptes' : key}
+                  <span className="text-sm text-gray-700">
+                    {optionLabels[key]}
                   </span>
                   <Switch
                     checked={value}
@@ -99,9 +139,10 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                disabled={isCreating || !name.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Créer
+                {isCreating ? 'Création...' : 'Créer'}
               </button>
             </div>
           </form>

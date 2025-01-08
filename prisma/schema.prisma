@@ -118,6 +118,27 @@ model Group {
   members       GroupMember[]
   messages      GroupMessage[]
   secretSantas  SecretSanta[]
+  events        Event[]
+
+  @@unique([name])
+}
+
+model Event {
+  id            String   @id @default(cuid())
+  name          String
+  groupId       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  hasLocation   Boolean  @default(false)
+  hasCalendar   Boolean  @default(false)
+  hasMenus      Boolean  @default(false)
+  hasShopping   Boolean  @default(false)
+  hasActivities Boolean  @default(false)
+  hasPhotos     Boolean  @default(false)
+  hasAccounts   Boolean  @default(false)
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
 }
 
 model GroupMember {

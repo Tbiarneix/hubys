@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useState } from 'react';
@@ -92,7 +93,7 @@ export default function SecretSantaCard({
                       )}
                     </button>
                     {showResult && (
-                      <p className="text-xl font-bold text-blue-500">
+                      <p className="text-xl font-bold text-gray-800">
                         {assignment.receiver.name}
                       </p>
                     )}
@@ -129,15 +130,17 @@ export default function SecretSantaCard({
         isOpen={isLaunchModalOpen}
         onClose={() => setIsLaunchModalOpen(false)}
         onConfirm={onLaunch}
-        type="launch"
+        isRelaunch={false}
+        groupId={groupId}
       />
       <SecretSantaModal
         groupName={groupName}
         isOpen={isRelaunchModalOpen}
         onClose={() => setIsRelaunchModalOpen(false)}
         onConfirm={onRelaunch}
-        type="relaunch"
-      />
+        isRelaunch={true}
+        groupId={groupId}
+/>
       <CancelSecretSantaModal
         groupName={groupName}
         isOpen={isCancelModalOpen}

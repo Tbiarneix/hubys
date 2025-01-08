@@ -215,7 +215,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
                     className="block p-6 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+                      <div className="w-16 h-16 rounded-full overflow-hidden">
                         <Image
                           src={member.user.avatar || generateAvatarUrl(member.user.name)}
                           alt={member.user.name}

@@ -1,56 +1,70 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import prisma from '@/lib/prisma';
+import { authOptions } from '@/lib/auth';
 
-export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+interface Editor {
+  id: string;
+}
+
+interface Parent {
+  id: string;
+}
+
+interface Child {
+  parents: Parent[];
+}
+
+interface WishList {
+  userId: string;
+  childId: string | null;
+  child?: Child;
+  editors: Editor[];
+  publicId?: string;
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
+    const { id: wishlistId } = await params;
 
-    if (!user) {
-      return new NextResponse('User not found', { status: 404 });
-    }
-
-    // Vérifier si l'utilisateur a accès à la liste
     const wishlist = await prisma.wishList.findUnique({
-      where: { id: params.id },
+      where: { id: wishlistId },
       include: {
-        editors: true,
         child: {
           include: {
-            parents: true
-          }
-        }
-      }
+            parents: true,
+          },
+        },
+        editors: true,
+      },
     });
 
     if (!wishlist) {
-      return new NextResponse('Liste non trouvée', { status: 404 });
+      return NextResponse.json({ message: 'Liste non trouvée' }, { status: 404 });
     }
 
-    // Vérifier l'accès
-    const hasAccess = 
-      wishlist.userId === user.id || // Propriétaire
-      wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-      (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+    // Vérifier si l'utilisateur est autorisé
+    const isOwner = wishlist.userId === session.user.id;
+    const isEditor = wishlist.editors.some((editor: Editor) => editor.id === session.user.id);
+    const isParentOfChild = wishlist.childId && wishlist.child?.parents.some((parent: Parent) => parent.id === session.user.id);
 
-    if (!hasAccess) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (!isOwner && !isEditor && !isParentOfChild) {
+      return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
     // Si la liste n'a pas déjà un publicId, en générer un
     if (!wishlist.publicId) {
       const updatedWishlist = await prisma.wishList.update({
-        where: { id: params.id },
+        where: { id: wishlistId },
         data: { publicId: undefined }, // Cela déclenchera la génération automatique du publicId
-        select: { publicId: true }
       });
       return NextResponse.json({ publicId: updatedWishlist.publicId });
     }
@@ -58,7 +72,10 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     // Si la liste a déjà un publicId, le renvoyer
     return NextResponse.json({ publicId: wishlist.publicId });
   } catch (error) {
-    console.error('Error sharing wishlist:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('Error in share wishlist:', error);
+    return NextResponse.json(
+      { message: 'Erreur lors du partage de la liste' },
+      { status: 500 }
+    );
   }
 }

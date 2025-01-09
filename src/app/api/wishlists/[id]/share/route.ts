@@ -11,18 +11,6 @@ interface Parent {
   id: string;
 }
 
-interface Child {
-  parents: Parent[];
-}
-
-interface WishList {
-  userId: string;
-  childId: string | null;
-  child?: Child;
-  editors: Editor[];
-  publicId?: string;
-}
-
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

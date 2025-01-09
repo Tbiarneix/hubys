@@ -9,7 +9,7 @@ interface AddLocationModalProps {
   groupId: string;
 }
 
-export function AddLocationModal({ isOpen, setIsOpen, eventId, groupId }: AddLocationModalProps) {
+export function AddLocationModal({ isOpen, setIsOpen, eventId }: AddLocationModalProps) {
   const [url, setUrl] = useState('');
   const [amount, setAmount] = useState('');
   const router = useRouter();

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Location, LocationSettings, Subgroup } from "@/types/location";
 import { Plus } from "lucide-react";
 import { AddLocationModal } from "@/components/location/AddLocationModal";

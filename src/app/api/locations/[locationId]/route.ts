@@ -37,7 +37,7 @@ export async function DELETE(
 
     // Vérifier si l'utilisateur est membre du groupe
     const isMember = location.event.group.members.some(
-      (member) => member.userId === session.user.id
+      (member: { userId: string }) => member.userId === session.user.id
     );
 
     if (!isMember) {

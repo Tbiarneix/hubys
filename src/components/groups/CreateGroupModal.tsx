@@ -38,7 +38,6 @@ export function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
       }
 
       const group = await response.json();
-      console.log(group);
       router.push(`/groups/${group.id}`);
       toast.success('Groupe créé avec succès');
       onClose();

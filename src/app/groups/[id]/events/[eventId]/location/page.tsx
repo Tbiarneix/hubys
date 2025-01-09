@@ -125,10 +125,13 @@ async function getData({ id, eventId }: { id: string; eventId: string }) {
     return true;
   });
 
-  console.log(uniqueSubgroups);
   return {
     locations: event.locations,
     subgroups: uniqueSubgroups,
+    settings: {
+      adultShare: event.adultShare,
+      childShare: event.childShare,
+    }
   };
 }
 

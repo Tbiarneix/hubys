@@ -141,6 +141,8 @@ model Event {
   hasActivities Boolean  @default(false)
   hasPhotos     Boolean  @default(false)
   hasAccounts   Boolean  @default(false)
+  adultShare    Float    @default(1)
+  childShare    Float    @default(0.5)
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   locations     Location[]
 

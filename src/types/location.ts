@@ -33,5 +33,4 @@ export interface Subgroup {
 export interface LocationSettings {
   adultShare: number;
   childShare: number;
-  maxVotesPerUser: number | null; // null means unlimited
 }

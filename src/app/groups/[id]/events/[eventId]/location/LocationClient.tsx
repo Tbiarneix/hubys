@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Location, LocationSettings, Subgroup } from "@/types/location";
 import { Plus } from "lucide-react";
 import { AddLocationModal } from "@/components/location/AddLocationModal";
@@ -17,16 +18,20 @@ interface LocationClientProps {
 }
 
 export default function LocationClient({ initialData, eventId, groupId }: LocationClientProps) {
+  const [locations, setLocations] = useState(initialData.locations);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [settings, setSettings] = useState<LocationSettings>({
     adultShare: 1,
     childShare: 0.5,
-    maxVotesPerUser: null,
   });
 
+  useEffect(() => {
+    setLocations(initialData.locations);
+  }, [initialData.locations]);
+
   // Sort locations by points
-  const sortedLocations = [...initialData.locations].sort((a, b) => {
+  const sortedLocations = [...locations].sort((a, b) => {
     const pointsA = a.votes.reduce((sum, vote) => sum + vote.value, 0);
     const pointsB = b.votes.reduce((sum, vote) => sum + vote.value, 0);
     return pointsB - pointsA;
@@ -34,7 +39,7 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
 
   return (
     <div className="flex">
-      <div className="flex-1 p-6 pr-80">
+      <div className="flex-1 p-6 pr-28">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-800">Propositions de location</h2>
           <button
@@ -51,7 +56,6 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
             <LocationCard
               key={location.id}
               location={location}
-              maxVotesPerUser={settings.maxVotesPerUser}
               onSelect={setSelectedLocation}
               isSelected={selectedLocation?.id === location.id}
             />
@@ -71,6 +75,7 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
         onSettingsChange={setSettings}
         selectedLocation={selectedLocation}
         subgroups={initialData.subgroups}
+        eventId={eventId}
       />
     </div>
   );

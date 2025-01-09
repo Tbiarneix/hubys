@@ -21,6 +21,17 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    domains: [
+      'api.homeexchange.com',
+      'imagedelivery.net',
+      'a0.muscache.com',
+      'www.airbnb.com',
+      'www.airbnb.fr',
+      'tripadvisor.com',
+    ],
+  },
+  experimental: {
+    serverActions: true,
   },
 }
 

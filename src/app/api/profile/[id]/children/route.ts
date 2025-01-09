@@ -112,10 +112,11 @@ export async function POST(
 // PUT /api/profile/[id]/children/[childId]
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string; childId: string } }
+  props: { params: Promise<{ id: string; childId: string }> }
 ) {
+  const params = await props.params;
   const { id, childId } = params;
-  
+
   try {
     const session = await getServerSession(authOptions);
     

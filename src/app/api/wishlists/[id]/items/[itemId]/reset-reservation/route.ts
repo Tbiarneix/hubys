@@ -3,8 +3,9 @@ import prisma from '@/lib/prisma';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string; itemId: string } }
+  props: { params: Promise<{ id: string; itemId: string }> }
 ) {
+  const params = await props.params;
   try {
     // Réinitialisation de l'état de réservation
     const updatedItem = await prisma.wishlistItem.update({

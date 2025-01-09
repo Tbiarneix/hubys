@@ -5,8 +5,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; eventId: string } }
+  props: { params: Promise<{ id: string; eventId: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

@@ -1,13 +1,14 @@
 import prisma from "@/lib/prisma";
 
 interface EventPageProps {
-  params: {
+  params: Promise<{
     id: string;
     eventId: string;
-  };
+  }>;
 }
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage(props: EventPageProps) {
+  const params = await props.params;
   const event = await prisma.event.findUnique({
     where: {
       id: params.eventId,

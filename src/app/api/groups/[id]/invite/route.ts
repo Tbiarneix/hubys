@@ -7,10 +7,8 @@ import { addDays } from 'date-fns';
 import { sendEmail } from '@/lib/email';
 
 // POST /api/groups/[id]/invite - Créer une invitation
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

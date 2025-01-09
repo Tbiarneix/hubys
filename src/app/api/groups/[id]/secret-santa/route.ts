@@ -70,10 +70,8 @@ async function generateSecretSantaAssignments(
 }
 
 // POST /api/groups/[id]/secret-santa - Créer un nouveau Secret Santa
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     console.log("Début de la route POST Secret Santa");
 
@@ -223,10 +221,8 @@ export async function POST(
 }
 
 // GET /api/groups/[id]/secret-santa - Récupérer le Secret Santa actuel
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -289,10 +285,8 @@ export async function GET(
 }
 
 // DELETE /api/groups/[id]/secret-santa - Annuler le Secret Santa actuel
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

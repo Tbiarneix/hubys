@@ -7,10 +7,10 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 // GET /api/profile/[id]
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = (await context.params);
     const profile = await prisma.user.findUnique({
       where: {
         id: id,
@@ -46,10 +46,10 @@ export async function GET(
 // PUT /api/profile/[id]
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = (await context.params);
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.id !== id) {
@@ -95,18 +95,18 @@ export async function PUT(
 // DELETE /api/profile/[id]
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Vérifier que l'ID est présent
-    if (!context?.params?.id) {
+    if (!(await context?.params)?.id) {
       return NextResponse.json(
         { error: "ID is required" },
         { status: 400 }
       );
     }
 
-    const id = context.params.id;
+    const id = (await context.params).id;
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.id !== id) {

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Link as LinkIcon, Trash2, Pencil, RotateCcw } from 'lucide-react';

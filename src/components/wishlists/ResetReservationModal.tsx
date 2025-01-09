@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { AlertTriangle } from 'lucide-react'

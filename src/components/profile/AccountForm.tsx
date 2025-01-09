@@ -1,42 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, Dispatch, SetStateAction, FormEvent } from 'react';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface AccountFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-  email: string;
-}
+import { ProfileFormData } from '@/types/profile';
 
 interface AccountFormProps {
-  currentEmail: string;
-  userId: string;
+  formData: ProfileFormData;
+  setFormData: Dispatch<SetStateAction<ProfileFormData>>;
+  onSubmit: (e: FormEvent) => Promise<void>;
+  isSubmitting: boolean;
 }
 
-export function AccountForm({ currentEmail, userId }: AccountFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function AccountForm({ formData, setFormData, onSubmit, isSubmitting }: AccountFormProps) {
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false
   });
-  const [formData, setFormData] = useState<AccountFormData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-    email: currentEmail || '',
-  });
-
-  // Mettre à jour l'email quand currentEmail change
-  useEffect(() => {
-    if (currentEmail) {
-      setFormData(prev => ({
-        ...prev,
-        email: currentEmail
-      }));
-    }
-  }, [currentEmail]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,51 +24,8 @@ export function AccountForm({ currentEmail, userId }: AccountFormProps) {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(`/api/account/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword || undefined,
-          email: formData.email,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Une erreur est survenue');
-      }
-
-      toast.success("Informations du compte mises à jour avec succès");
-      
-      // Reset password fields
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      }));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour du compte");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
           Email

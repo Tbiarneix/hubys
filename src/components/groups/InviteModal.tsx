@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Copy, Mail, Loader2 } from 'lucide-react';

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState } from "react";
@@ -36,6 +37,7 @@ export function DeleteEventModal({
       }
 
       toast.success("Événement supprimé");
+      router.refresh();
       router.push(`/groups/${groupId}`);
     } catch (error) {
       console.error("Error deleting event:", error);

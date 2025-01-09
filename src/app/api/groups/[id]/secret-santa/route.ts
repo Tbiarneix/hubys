@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+
+interface GroupMember {
+  userId: string;
+  user: {
+    id: string;
+    receivedInvitations: { fromUserId: string }[];
+    sentInvitations: { toUserId: string }[];
+  };
+}
 
 // Fonction pour générer les assignments du Secret Santa
 async function generateSecretSantaAssignments(
@@ -162,7 +171,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     console.log("Members:", JSON.stringify(members, null, 2));
 
     // Préparer les données des membres avec leurs partenaires
-    const membersWithPartners = members.map(member => {
+    const membersWithPartners = members.map((member: GroupMember) => {
       const partnerId = 
         member.user.receivedInvitations[0]?.fromUserId ||
         member.user.sentInvitations[0]?.toUserId;

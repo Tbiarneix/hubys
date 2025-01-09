@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
@@ -19,6 +20,7 @@ import { toast } from "sonner";
 import { signOut } from "next-auth/react";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
+import { ProfileFormData } from '@/types/profile';
 
 interface WishList {
   id: string;
@@ -40,13 +42,6 @@ interface GroupInvitation {
   toUser: Partner | null;
   email: string;
   status: string;
-}
-
-interface ProfileFormData {
-  name: string;
-  bio: string;
-  image: string;
-  birthDate: string;
 }
 
 interface UserProfile {
@@ -74,10 +69,20 @@ interface Partner {
 
 interface PartnerInvitation {
   id: string;
-  fromUser: Partner;
-  toUser: Partner | null;
-  email: string;
   status: string;
+  email: string;
+  fromUser: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  toUser?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
 }
 
 export default function ProfilePage() {
@@ -98,6 +103,10 @@ export default function ProfilePage() {
     bio: "",
     image: "",
     birthDate: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    email: "",
   });
   const [isAddChildFormVisible, setIsAddChildFormVisible] = useState(false);
   const [childToDelete, setChildToDelete] = useState<Child | null>(null);
@@ -131,6 +140,10 @@ export default function ProfilePage() {
               bio: data.bio || '',
               image: data.avatar || '',
               birthDate: data.birthDate ? format(new Date(data.birthDate), 'yyyy-MM-dd') : '',
+              currentPassword: '',
+              newPassword: '',
+              confirmPassword: '',
+              email: data.email || '',
             });
           }
 
@@ -563,7 +576,7 @@ export default function ProfilePage() {
                               {partnerInvitation ? (
                                 <div className="bg-white rounded-lg shadow p-4">
                                   {partnerInvitation.status === "PENDING" ? (
-                                    partnerInvitation.toUserId === session?.user?.id ? (
+                                    partnerInvitation.toUser?.id === session?.user?.id ? (
                                       <div className="space-y-4">
                                         <div className="flex items-center space-x-4">
                                           <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(
   request: Request,
@@ -196,7 +196,7 @@ export async function PATCH(
     if (status === "ACCEPTED" && invitation.fromUser.children.length > 0) {
       // Mettre à jour chaque enfant pour ajouter le nouveau parent
       await Promise.all(
-        invitation.fromUser.children.map(child =>
+        invitation.fromUser.children.map((child: { id: string }) =>
           prisma.child.update({
             where: { id: child.id },
             data: {

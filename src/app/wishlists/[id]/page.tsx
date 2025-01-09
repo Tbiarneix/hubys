@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -630,7 +632,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
         }}
         onConfirm={() => selectedItemToDelete && handleDeleteItem(selectedItemToDelete.id)}
         title="Supprimer le cadeau"
-        message={`Êtes-vous sûr de vouloir supprimer "${selectedItemToDelete?.name}" de la liste ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer "${selectedItemToDelete?.name}" de la liste ? Cette action est irréversible.`}
       />
 
       {selectedItemToReset && (

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Vérifier que l'utilisateur est bien un parent de l'enfant
-    if (!child.parents.some(parent => parent.id === id)) {
+    if (!child.parents.some((parent: { id: string }) => parent.id === id)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -67,7 +67,7 @@ export async function DELETE(
     }
 
     // Vérifier que l'utilisateur est bien un parent de l'enfant
-    if (!child.parents.some(parent => parent.id === id)) {
+    if (!child.parents.some((parent: { id: string }) => parent.id === id)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

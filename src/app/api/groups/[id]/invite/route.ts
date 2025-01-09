@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { addDays } from 'date-fns';
@@ -37,6 +37,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     } catch (error) {
       // Si pas de body ou body invalide, on continue sans email
       // C'est le cas quand on génère juste un lien d'invitation
+      console.log('Error creating invitation:', error);
     }
 
     // Générer un token unique
@@ -103,6 +104,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
           fromUserId: session.user.id,
         },
       });
+      console.log('Invitation created:', invitation);
 
       return NextResponse.json({ token });
     }

@@ -7,14 +7,25 @@ import { DeleteEventModal } from "./groups/DeleteEventModal";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+interface Event {
+  id: string;
+  hasLocation: boolean;
+  hasCalendar: boolean;
+  hasMenus: boolean;
+  hasShopping: boolean;
+  hasActivities: boolean;
+  hasPhotos: boolean;
+  hasAccounts: boolean;
+}
+
 interface EventTabsProps {
-  event: any;
+  event: Event;
   groupId: string;
 }
 
 export default function EventTabs({ event, groupId }: EventTabsProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   const tabStyle = (isActive: boolean) =>
     `px-4 py-2 rounded-lg transition-colors ${
@@ -102,7 +113,7 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
 
       <DeleteEventModal
         isOpen={isDeleteModalOpen}
-        setIsOpen={setIsDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
         eventId={event.id}
         groupId={groupId}
       />

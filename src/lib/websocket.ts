@@ -3,6 +3,10 @@ import { Server as IOServer } from 'socket.io';
 import { getSession } from 'next-auth/react';
 import prisma from './prisma';
 
+interface GroupMember {
+  groupId: string;
+}
+
 export function initializeWebSocket(httpServer: HTTPServer) {
   const io = new IOServer(httpServer, {
     path: '/api/socket',
@@ -19,6 +23,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       socket.data.userId = session.user.id;
       next();
     } catch (error) {
+      console.error('Authentication error:', error);
       next(new Error('Authentication error'));
     }
   });
@@ -42,8 +47,8 @@ export function initializeWebSocket(httpServer: HTTPServer) {
           },
         });
 
-        const validGroupIds = memberships.map(m => m.groupId);
-        validGroupIds.forEach(groupId => {
+        const validGroupIds = memberships.map((m: GroupMember) => m.groupId);
+        validGroupIds.forEach((groupId: string) => {
           socket.join(`group:${groupId}`);
         });
       } catch (error) {

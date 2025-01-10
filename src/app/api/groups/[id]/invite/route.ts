@@ -44,7 +44,7 @@ export async function POST(
     } catch (error) {
       // Si pas de body ou body invalide, on continue sans email
       // C'est le cas quand on génère juste un lien d'invitation
-      console.log('Error creating invitation:', error);
+      console.error('Error creating invitation:', error);
     }
 
     // Générer un token unique
@@ -111,7 +111,7 @@ export async function POST(
           fromUserId: session.user.id,
         },
       });
-      console.log('Invitation created:', invitation);
+      console.info(invitation);
 
       return NextResponse.json({ token });
     }

@@ -63,13 +63,41 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     }
 
     // Vérifier si l'utilisateur est membre du groupe
-    const member = await prisma.groupMember.findFirst({
+    const groupWithMembers = await prisma.group.findFirst({
       where: {
-        groupId: params.id,
-        userId: session.user.id,
+        id: params.id,
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              include: {
+                children: true,
+                sentInvitations: {
+                  include: {
+                    toUser: true,
+                  },
+                },
+                receivedInvitations: {
+                  include: {
+                    fromUser: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
+    if (!groupWithMembers) {
+      return NextResponse.json(
+        { error: "Group not found" },
+        { status: 404 }
+      );
+    }
+
+    const member = groupWithMembers.members.find(m => m.userId === session.user.id);
     if (!member) {
       return NextResponse.json(
         { error: "Not a member of this group" },
@@ -77,6 +105,39 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       );
     }
 
+    // Calculer les sous-groupes
+    const subgroups = groupWithMembers.members.map((member) => {
+      const partnerFromSent = member.user.sentInvitations[0]?.toUser;
+      const partnerFromReceived = member.user.receivedInvitations[0]?.fromUser;
+      const partner = partnerFromSent || partnerFromReceived;
+
+      const adults = [member.userId];
+      if (partner) {
+        adults.push(partner.id);
+      }
+
+      const children = member.user.children.map(child => child.id);
+
+      return {
+        adults,
+        children,
+        activeAdults: [...adults], // Initialement, tous les adultes sont actifs
+        activeChildren: [...children], // Initialement, tous les enfants sont actifs
+      };
+    });
+
+    // Filtrer les doublons de couples
+    const processedPartners = new Set<string>();
+    const uniqueSubgroups = subgroups.filter((subgroup) => {
+      const subgroupKey = [...subgroup.adults].sort().join(',');
+      if (processedPartners.has(subgroupKey)) {
+        return false;
+      }
+      processedPartners.add(subgroupKey);
+      return true;
+    });
+
+    // Créer l'événement avec les sous-groupes
     const event = await prisma.event.create({
       data: {
         name,
@@ -90,6 +151,12 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         hasActivities: options?.activities ?? true,
         hasPhotos: options?.photos ?? true,
         hasAccounts: options?.accounts ?? true,
+        subgroups: {
+          create: uniqueSubgroups,
+        },
+      },
+      include: {
+        subgroups: true,
       },
     });
 

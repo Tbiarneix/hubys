@@ -11,6 +11,7 @@ interface LocationClientProps {
   initialData: {
     locations: Location[];
     subgroups: Subgroup[];
+    settings: LocationSettings;
   };
   eventId: string;
   groupId: string;
@@ -20,10 +21,7 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
   const [locations, setLocations] = useState(initialData.locations);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [settings, setSettings] = useState<LocationSettings>({
-    adultShare: 1,
-    childShare: 0.5,
-  });
+  const [settings, setSettings] = useState<LocationSettings>(initialData.settings);
 
   useEffect(() => {
     setLocations(initialData.locations);

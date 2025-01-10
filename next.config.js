@@ -38,6 +38,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.f1g.fr',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {

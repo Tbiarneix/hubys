@@ -94,11 +94,8 @@ export async function POST(
 ) {
   const params = await context.params;
   try {
-    console.log("Début de la route POST Secret Santa");
-
     // Vérifier que le client Prisma est disponible
     if (!prisma || !prisma.secretSanta) {
-      console.error("Client Prisma non initialisé correctement");
       return NextResponse.json(
         { error: "Erreur de configuration du serveur" },
         { status: 500 }
@@ -107,13 +104,11 @@ export async function POST(
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      console.log("Pas de session utilisateur");
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     // S'assurer que params.id est disponible
     if (!params?.id) {
-      console.error("ID du groupe manquant");
       return NextResponse.json(
         { error: "ID du groupe manquant" },
         { status: 400 }
@@ -122,7 +117,6 @@ export async function POST(
 
     const groupId = params.id;
     const currentYear = new Date().getFullYear();
-    console.log("GroupId:", groupId, "Year:", currentYear);
 
     // Vérifier si l'utilisateur est membre du groupe
     const membership = await prisma.groupMember.findUnique({
@@ -133,7 +127,6 @@ export async function POST(
         },
       },
     });
-    console.log("Membership:", membership);
 
     if (!membership) {
       return NextResponse.json(
@@ -151,7 +144,6 @@ export async function POST(
         },
       },
     });
-    console.log("Existing Secret Santa:", existingSecretSanta);
 
     if (existingSecretSanta) {
       return NextResponse.json(
@@ -181,7 +173,6 @@ export async function POST(
         },
       },
     });
-    console.log("Members:", JSON.stringify(members, null, 2));
 
     // Préparer les données des membres avec leurs partenaires
     const membersWithPartners = members.map((member: PrismaGroupMember) => {
@@ -194,15 +185,11 @@ export async function POST(
         partnerId,
       };
     });
-    console.log("Members with partners:", JSON.stringify(membersWithPartners, null, 2));
 
     // Générer les assignments
-    console.log("Génération des assignments...");
     const assignments = await generateSecretSantaAssignments(membersWithPartners);
-    console.log("Assignments générés:", JSON.stringify(assignments, null, 2));
 
     // Créer le Secret Santa et ses assignments
-    console.log("Création du Secret Santa...");
     const secretSanta = await prisma.secretSanta.create({
       data: {
         year: currentYear,
@@ -227,7 +214,6 @@ export async function POST(
         },
       },
     });
-    console.log("Secret Santa créé avec succès:", JSON.stringify(secretSanta, null, 2));
 
     return NextResponse.json(secretSanta);
   } catch (error) {

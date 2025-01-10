@@ -1,9 +1,9 @@
-/* eslint-disable react/no-unescaped-entities */
 import prisma from "@/lib/prisma";
 import { Users } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SubgroupCard } from "./SubgroupCard";
+import { redirect } from "next/navigation";
 
 interface EventPageProps {
   params: Promise<{
@@ -44,7 +44,7 @@ export default async function EventPage(props: EventPageProps) {
   });
 
   if (!event) {
-    return <div>Événement non trouvé</div>;
+    redirect(`/groups/${params.id}`);
   }
 
   const startDate = new Date(event.startDate).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });

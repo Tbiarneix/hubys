@@ -39,8 +39,6 @@ export function CreateWishlistModal({ isOpen, onClose, childId, userId, onCreate
         ...(userId && { userId }),
       };
       
-      console.log('Sending payload:', payload);
-      
       const response = await fetch('/api/wishlists', {
         method: 'POST',
         headers: {

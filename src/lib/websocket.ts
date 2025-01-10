@@ -30,7 +30,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
   // Gestion des connexions
   io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    console.info('Client connected:', socket.id);
 
     // Rejoindre les salons des groupes
     socket.on('join-groups', async (groupIds: string[]) => {
@@ -100,7 +100,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     });
 
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+      console.info('Client disconnected:', socket.id);
     });
   });
 

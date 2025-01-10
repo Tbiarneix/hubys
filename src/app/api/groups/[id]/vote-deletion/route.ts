@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
+
+type Params = {
+  params: Promise<{ id: string }>
+}
 
 // POST /api/groups/[id]/vote-deletion - Voter pour la suppression
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

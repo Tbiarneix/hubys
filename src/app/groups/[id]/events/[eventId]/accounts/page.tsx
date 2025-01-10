@@ -2,13 +2,14 @@ import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 interface AccountsPageProps {
-  params: {
+  params: Promise<{
     id: string;
     eventId: string;
-  };
+  }>;
 }
 
-export default async function AccountsPage({ params }: AccountsPageProps) {
+export default async function AccountsPage(props: AccountsPageProps) {
+  const params = await props.params;
   const event = await prisma.event.findUnique({
     where: {
       id: params.eventId,

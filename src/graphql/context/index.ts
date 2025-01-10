@@ -9,7 +9,6 @@ export type Context = {
   session: Awaited<ReturnType<typeof getServerSession>> | null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function createContext(): Promise<Context> {
   const session = await getServerSession(authOptions);
 

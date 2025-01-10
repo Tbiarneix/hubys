@@ -3,8 +3,11 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 
 // GET /api/wishlists/[id]/categories - Get all categories for a wishlist
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
   const session = await getServerSession();
 
   if (!session?.user?.email) {
@@ -38,8 +41,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
   // Vérifier l'accès
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
-    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.childId && wishlist.child?.parents.some(parent => parent.id === user.id)); // Parent de l'enfant
+    wishlist.editors.some((editor: { id: string }) => editor.id === user.id) || // Éditeur
+    (wishlist.childId && wishlist.child?.parents.some((parent: { id: string }) => parent.id === user.id)); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -59,8 +62,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // POST /api/wishlists/[id]/categories - Create a new category
-export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
   const session = await getServerSession();
 
   if (!session?.user?.email) {
@@ -94,8 +100,8 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   // Vérifier l'accès
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
-    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.childId && wishlist.child?.parents.some(parent => parent.id === user.id)); // Parent de l'enfant
+    wishlist.editors.some((editor: { id: string }) => editor.id === user.id) || // Éditeur
+    (wishlist.childId && wishlist.child?.parents.some((parent: { id: string }) => parent.id === user.id)); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -123,8 +129,11 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 }
 
 // PATCH /api/wishlists/[id]/categories - Reorder categories
-export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
   const session = await getServerSession();
 
   if (!session?.user?.email) {
@@ -158,8 +167,8 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   // Vérifier l'accès
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
-    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+    wishlist.editors.some((editor: { id: string }) => editor.id === user.id) || // Éditeur
+    (wishlist.childId && wishlist.child?.parents.some((parent: { id: string }) => parent.id === user.id)); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

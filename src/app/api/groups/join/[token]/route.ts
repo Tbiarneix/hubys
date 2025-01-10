@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 
 // POST /api/groups/join/[token] - Rejoindre un groupe via une invitation
+type Params = {
+  params: Promise<{ token: string }>
+}
+
 export async function POST(
-  req: Request,
-  { params }: { params: { token: string } }
+  request: Request,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {

@@ -1,20 +1,61 @@
-import { sign, verify } from 'jsonwebtoken';
+import { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { compare } from "bcrypt";
+import prisma from "@/lib/prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export const authOptions: AuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email et mot de passe requis");
+        }
 
-export function generateToken(user: { id: string; email: string }) {
-  return sign(
-    { id: user.id, email: user.email },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-}
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+        });
 
-export function verifyToken(token: string) {
-  try {
-    return verify(token, JWT_SECRET) as { id: string; email: string };
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    throw new Error('Invalid token');
-  }
-}
+        if (!user) {
+          throw new Error("Aucun utilisateur trouvé avec cet email");
+        }
+
+        const isPasswordValid = await compare(credentials.password, user.password);
+
+        if (!isPasswordValid) {
+          throw new Error("Mot de passe incorrect");
+        }
+
+        return user;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/",
+  },
+  session: {
+    strategy: "jwt",
+  },
+};

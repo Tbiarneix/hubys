@@ -2,13 +2,14 @@ import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 interface PhotosPageProps {
-  params: {
+  params: Promise<{
     id: string;
     eventId: string;
-  };
+  }>;
 }
 
-export default async function PhotosPage({ params }: PhotosPageProps) {
+export default async function PhotosPage(props: PhotosPageProps) {
+  const params = await props.params;
   const event = await prisma.event.findUnique({
     where: {
       id: params.eventId,

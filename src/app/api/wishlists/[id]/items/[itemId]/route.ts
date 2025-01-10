@@ -5,9 +5,9 @@ import prisma from '@/lib/prisma';
 // DELETE /api/wishlists/[id]/items/[itemId] - Delete an item
 export async function DELETE(
   request: NextRequest,
-  props: { params: Promise<{ id: string; itemId: string }> }
+  context: { params: Promise<{ id: string; itemId: string }> }
 ) {
-  const params = await props.params;
+  const params = await context.params;
   const session = await getServerSession();
 
   if (!session?.user?.email) {
@@ -41,8 +41,8 @@ export async function DELETE(
   // Vérifier l'accès
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
-    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+    wishlist.editors.some((editor: { id: string }) => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some((parent: { id: string }) => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -70,9 +70,9 @@ export async function DELETE(
 // PUT /api/wishlists/[id]/items/[itemId] - Update an item
 export async function PUT(
   request: NextRequest,
-  props: { params: Promise<{ id: string; itemId: string }> }
+  context: { params: Promise<{ id: string; itemId: string }> }
 ) {
-  const params = await props.params;
+  const params = await context.params;
   const session = await getServerSession();
 
   if (!session?.user?.email) {
@@ -106,8 +106,8 @@ export async function PUT(
   // Vérifier l'accès
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
-    wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
+    wishlist.editors.some((editor: { id: string }) => editor.id === user.id) || // Éditeur
+    (wishlist.child && wishlist.child.parents.some((parent: { id: string }) => parent.id === user.id) && wishlist.userId === wishlist.child.id); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -17,25 +17,18 @@ export const authOptions: AuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
+          where: { email: credentials.email },
         });
 
-        if (!user) {
-          throw new Error("Aucun utilisateur trouvé avec cet email");
-        }
-
-        const isPasswordValid = await compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          throw new Error("Mot de passe incorrect");
+        if (!user || !await compare(credentials.password, user.password)) {
+          return null;
         }
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          password: user.password
         };
       },
     }),

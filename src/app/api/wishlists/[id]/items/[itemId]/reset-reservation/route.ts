@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+type Params = {
+  params: Promise<{ id: string; itemId: string }>
+}
+
 export async function POST(
   request: Request,
-  { params }: { params: { id: string; itemId: string } }
+  context: Params
 ) {
+  const params = await context.params;
   try {
     // Réinitialisation de l'état de réservation
     const updatedItem = await prisma.wishlistItem.update({

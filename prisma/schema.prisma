@@ -28,6 +28,8 @@ model User {
   editableWishlists    WishList[]          @relation("WishListEditors")
   giverAssignments     SecretSantaAssignment[] @relation("GiverAssignments")
   receiverAssignments  SecretSantaAssignment[] @relation("ReceiverAssignments")
+  locationVotes        LocationVote[]
+  partneredMembers     GroupMember[]       @relation("GroupMemberPartner")
 }
 
 model WishList {
@@ -83,13 +85,14 @@ model WishlistItem {
 }
 
 model Child {
-  id        String     @id @default(cuid())
-  firstName String
-  birthDate DateTime
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  wishlists WishList[]
-  parents   User[]     @relation("ParentChild")
+  id          String        @id @default(cuid())
+  firstName   String
+  birthDate   DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  wishlists   WishList[]
+  parents     User[]        @relation("ParentChild")
+  memberOf    GroupMember[] @relation("GroupMemberChildren")
 }
 
 model PartnerInvitation {
@@ -138,23 +141,55 @@ model Event {
   hasActivities Boolean  @default(false)
   hasPhotos     Boolean  @default(false)
   hasAccounts   Boolean  @default(false)
+  adultShare    Float    @default(1)
+  childShare    Float    @default(0.5)
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  locations     Location[]
 
   @@index([groupId])
 }
 
+model Location {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  url       String
+  amount    Float
+  title     String
+  image     String
+  createdAt DateTime @default(now())
+  createdBy String
+  votes     LocationVote[]
+}
+
+model LocationVote {
+  id         String   @id @default(cuid())
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@unique([locationId, userId])
+}
+
 model GroupMember {
-  id       String   @id @default(cuid())
-  userId   String
-  groupId  String
-  joinedAt DateTime @default(now())
-  role     String   @default("MEMBER")
-  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  userId     String
+  groupId    String
+  joinedAt   DateTime  @default(now())
+  role       String    @default("MEMBER")
+  partnerId  String?
+  group      Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partner    User?     @relation("GroupMemberPartner", fields: [partnerId], references: [id])
+  children   Child[]   @relation("GroupMemberChildren")
 
   @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
+  @@index([partnerId])
 }
 
 model GroupMessage {

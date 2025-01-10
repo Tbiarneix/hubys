@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+type Params = {
+  params: Promise<{ id: string }>
+}
+
+export async function POST(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const body = await request.json();
     const reserverName = body?.reserverName || null;

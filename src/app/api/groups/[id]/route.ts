@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
+
+type Params = {
+  params: Promise<{ id: string }>
+}
 
 // GET /api/groups/[id] - Récupérer un groupe spécifique
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -70,7 +75,7 @@ export async function GET(
 
     return NextResponse.json({
       ...group,
-      deletionVotes: group.deletionVotes.map(vote => vote.userId),
+      deletionVotes: group.deletionVotes.map((vote: { userId: string }) => vote.userId),
     });
   } catch (error) {
     console.error('Error fetching group:', error);
@@ -83,9 +88,10 @@ export async function GET(
 
 // POST /api/groups/[id]/messages - Ajouter un message au groupe
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -104,7 +110,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { content } = await req.json();
+    const { content } = await request.json();
 
     const message = await prisma.groupMessage.create({
       data: {

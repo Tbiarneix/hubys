@@ -7,10 +7,11 @@ import { useSession } from 'next-auth/react';
 interface CreateWishlistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  childId?: string;
+  childId: string;
+  onCreated: (wishlist: { id: string; title: string; createdAt: string }) => void;
 }
 
-export function CreateWishlistModal({ isOpen, onClose, childId }: CreateWishlistModalProps) {
+export function CreateWishlistModal({ isOpen, onClose, childId, onCreated }: CreateWishlistModalProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [title, setTitle] = useState('');
@@ -59,6 +60,7 @@ export function CreateWishlistModal({ isOpen, onClose, childId }: CreateWishlist
       const wishlist = await response.json();
       router.push(`/wishlists/${wishlist.id}`);
       onClose();
+      onCreated(wishlist);
     } catch (error) {
       console.error('Error creating wishlist:', error);
       // Here you could add proper error handling UI

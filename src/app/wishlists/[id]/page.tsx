@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -327,19 +329,23 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
     try {
       const response = await fetch(`/api/wishlists/${params.id}/share`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Erreur lors du partage de la liste');
+        throw new Error(data.message || 'Erreur lors du partage de la liste');
       }
       
-      const { publicId } = await response.json();
-      const shareUrl = `${window.location.origin}/shared/${publicId}`;
-      
+      const shareUrl = `${window.location.origin}/shared/${data.publicId}`;
       await navigator.clipboard.writeText(shareUrl);
-      window.open(`/shared/${publicId}`, '_blank');
+      window.open(`/shared/${data.publicId}`, '_blank');
     } catch (error) {
       console.error('Error sharing wishlist:', error);
+      // Optionnel : Ajouter une notification d'erreur pour l'utilisateur
     }
   };
 
@@ -630,7 +636,7 @@ export default function WishlistPage(props: { params: Promise<{ id: string }> })
         }}
         onConfirm={() => selectedItemToDelete && handleDeleteItem(selectedItemToDelete.id)}
         title="Supprimer le cadeau"
-        message={`Êtes-vous sûr de vouloir supprimer "${selectedItemToDelete?.name}" de la liste ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer "${selectedItemToDelete?.name}" de la liste ? Cette action est irréversible.`}
       />
 
       {selectedItemToReset && (

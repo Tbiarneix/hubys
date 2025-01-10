@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+
+interface PrismaGroupMember {
+  userId: string;
+  user: {
+    id: string;
+    email: string | null;
+    receivedInvitations: Array<{
+      fromUserId: string;
+    }>;
+    sentInvitations: Array<{
+      toUserId: string | null;
+    }>;
+  };
+}
 
 // Fonction pour générer les assignments du Secret Santa
 async function generateSecretSantaAssignments(
@@ -69,11 +83,16 @@ async function generateSecretSantaAssignments(
   throw new Error("Impossible de générer une distribution valide");
 }
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 // POST /api/groups/[id]/secret-santa - Créer un nouveau Secret Santa
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     console.log("Début de la route POST Secret Santa");
 
@@ -149,6 +168,7 @@ export async function POST(
         user: {
           select: {
             id: true,
+            email: true,
             receivedInvitations: {
               where: { status: "ACCEPTED" },
               select: { fromUserId: true },
@@ -164,10 +184,11 @@ export async function POST(
     console.log("Members:", JSON.stringify(members, null, 2));
 
     // Préparer les données des membres avec leurs partenaires
-    const membersWithPartners = members.map(member => {
+    const membersWithPartners = members.map((member: PrismaGroupMember) => {
       const partnerId = 
         member.user.receivedInvitations[0]?.fromUserId ||
-        member.user.sentInvitations[0]?.toUserId;
+        member.user.sentInvitations[0]?.toUserId ||
+        undefined;
       return {
         id: member.userId,
         partnerId,
@@ -224,9 +245,10 @@ export async function POST(
 
 // GET /api/groups/[id]/secret-santa - Récupérer le Secret Santa actuel
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -290,9 +312,10 @@ export async function GET(
 
 // DELETE /api/groups/[id]/secret-santa - Annuler le Secret Santa actuel
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

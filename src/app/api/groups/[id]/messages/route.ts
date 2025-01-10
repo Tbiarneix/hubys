@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 
 // POST /api/groups/[id]/messages - Créer un message dans le groupe
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -28,7 +33,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { content } = await req.json();
+    const { content } = await request.json();
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
       return NextResponse.json(

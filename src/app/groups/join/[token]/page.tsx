@@ -2,10 +2,11 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { toast } from 'sonner';
 
-export default function JoinGroupPage({ params }: { params: { token: string } }) {
+export default function JoinGroupPage(props: { params: Promise<{ token: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);

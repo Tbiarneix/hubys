@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
+
+interface InvitationType {
+  id: string;
+  groupId: string;
+  group: { name: string };
+  email: string | null;
+  status: string;
+  fromUser: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  };
+}
 
 // GET /api/groups/invitations - Récupérer toutes les invitations de l'utilisateur
 export async function GET() {
@@ -36,7 +50,7 @@ export async function GET() {
     });
 
     // Transformer les données pour correspondre à l'interface GroupInvitation
-    const formattedInvitations = invitations.map(invitation => ({
+    const formattedInvitations = invitations.map((invitation: InvitationType) => ({
       id: invitation.id,
       groupId: invitation.groupId,
       groupName: invitation.group.name,

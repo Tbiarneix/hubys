@@ -1,18 +1,23 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
+const prismaClientPropertyName = `__prevent-name-collision__prisma`;
+type GlobalThisWithPrismaClient = typeof globalThis & {
+	[prismaClientPropertyName]: PrismaClient;
 };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
+const getPrismaClient = () => {
+	if (process.env.NODE_ENV === `production`) {
+		return new PrismaClient();
+	} else {
+		const newGlobalThis = globalThis as GlobalThisWithPrismaClient;
+		if (!newGlobalThis[prismaClientPropertyName]) {
+			newGlobalThis[prismaClientPropertyName] = new PrismaClient();
+		}
+		return newGlobalThis[prismaClientPropertyName];
+	}
+};
+const prisma = getPrismaClient();
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
-
+export const adapter = PrismaAdapter(prisma);
 export default prisma;
-
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
-}

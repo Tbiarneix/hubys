@@ -7,7 +7,7 @@ interface InvitationType {
   id: string;
   groupId: string;
   group: { name: string };
-  email: string;
+  email: string | null;
   status: string;
   fromUser: {
     id: string;

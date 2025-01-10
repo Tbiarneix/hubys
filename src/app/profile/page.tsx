@@ -1178,6 +1178,11 @@ export default function ProfilePage() {
       <CreateWishlistModal 
         isOpen={isWishlistModalOpen}
         onClose={() => setIsWishlistModalOpen(false)}
+        childId={session?.user?.id || ''}
+        onCreated={(wishlist) => {
+          setWishlists([...wishlists, wishlist]);
+          setIsWishlistModalOpen(false);
+        }}
       />
 
       <CreateGroupModal

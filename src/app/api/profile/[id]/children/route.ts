@@ -4,12 +4,17 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+type Params = {
+  params: Promise<{ id: string; childId: string }>
+}
+
 // GET /api/profile/[id]/children
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
+  const { id } = params;
   try {
     const children = await prisma.child.findMany({
       where: {
@@ -39,13 +44,13 @@ export async function GET(
 // POST /api/profile/[id]/children
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.id !== id) {
+    if (!session || session.user.id !== params.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -56,8 +61,8 @@ export async function POST(
     const partnership = await prisma.partnerInvitation.findFirst({
       where: {
         OR: [
-          { fromUserId: id },
-          { toUserId: id }
+          { fromUserId: params.id },
+          { toUserId: params.id }
         ],
         status: "ACCEPTED"
       },
@@ -79,9 +84,9 @@ export async function POST(
     const { firstName, birthDate } = body;
 
     // Préparer les parents de l'enfant
-    const parentIds = [{ id }];
-    if (partnership) {
-      const partnerId = partnership.fromUser.id === id 
+    const parentIds = [{ id: params.id }];
+    if (partnership && partnership.toUser && partnership.fromUser) {
+      const partnerId = partnership.fromUser.id === params.id 
         ? partnership.toUser.id 
         : partnership.fromUser.id;
       parentIds.push({ id: partnerId });
@@ -112,15 +117,14 @@ export async function POST(
 // PUT /api/profile/[id]/children/[childId]
 export async function PUT(
   request: Request,
-  props: { params: Promise<{ id: string; childId: string }> }
+  context: Params
 ) {
-  const params = await props.params;
-  const { id, childId } = params;
+  const params = await context.params;
 
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.id !== id) {
+    if (!session || session.user.id !== params.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -133,10 +137,10 @@ export async function PUT(
     // Vérifier que l'utilisateur est bien un parent de l'enfant
     const child = await prisma.child.findFirst({
       where: {
-        id: childId,
+        id: params.childId,
         parents: {
           some: {
-            id: id
+            id: params.id
           }
         }
       }
@@ -151,7 +155,7 @@ export async function PUT(
 
     const updatedChild = await prisma.child.update({
       where: {
-        id: childId,
+        id: params.childId,
       },
       data: {
         firstName,
@@ -174,12 +178,12 @@ export async function PUT(
 // DELETE /api/profile/[id]/children/[childId]
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; childId: string } }
+  context: Params
 ) {
-  const { id, childId } = await params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.id !== id) {
+    if (!session?.user?.id || session.user.id !== params.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -189,19 +193,19 @@ export async function DELETE(
       // Suppression complète de l'enfant
       await prisma.child.delete({
         where: {
-          id: childId,
+          id: params.childId,
         },
       });
     } else {
       // Suppression de la relation parent-enfant uniquement
       await prisma.child.update({
         where: {
-          id: childId,
+          id: params.childId,
         },
         data: {
           parents: {
             disconnect: {
-              id: id
+              id: params.id
             }
           }
         },

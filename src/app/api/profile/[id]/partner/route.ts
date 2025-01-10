@@ -3,11 +3,16 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
+  const { id } = params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.id !== id) {
@@ -51,9 +56,10 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
+  const { id } = params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.id !== id) {
@@ -158,9 +164,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
+  const { id } = params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.id !== id) {
@@ -218,9 +225,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
+  const { id } = params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.id !== id) {

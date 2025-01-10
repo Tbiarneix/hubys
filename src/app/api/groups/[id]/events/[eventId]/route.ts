@@ -3,11 +3,15 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+type Params = {
+  params: Promise<{ id: string; eventId: string }>
+}
+
 export async function DELETE(
   request: NextRequest,
-  props: { params: Promise<{ id: string; eventId: string }> }
+  context: Params
 ) {
-  const params = await props.params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

@@ -4,8 +4,15 @@ import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 
 // POST /api/groups/[id]/messages - Créer un message dans le groupe
-export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+type Params = {
+  params: Promise<{ id: string }>
+}
+
+export async function POST(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -26,7 +33,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { content } = await req.json();
+    const { content } = await request.json();
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
       return NextResponse.json(

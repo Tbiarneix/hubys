@@ -1,8 +1,8 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { use, useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Group, SecretSanta } from '@/types/group';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,8 +17,9 @@ import SecretSantaCard from '@/components/groups/SecretSantaCard';
 import EventCard from '@/components/groups/EventCard';
 import { ChatSidebar } from '@/components/groups/ChatSidebar';
 
-export default function GroupPage({ params }: { params: { id: string } }) {
-  const id = use(params).id;
+export default function GroupPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { data: session, status } = useSession();
   const [group, setGroup] = useState<Group | null>(null);

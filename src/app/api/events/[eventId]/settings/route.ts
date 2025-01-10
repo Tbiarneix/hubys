@@ -3,10 +3,15 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+type Params = {
+  params: Promise<{ eventId: string }>
+}
+
 export async function PATCH(
   request: Request,
-  { params }: { params: { eventId: string } }
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

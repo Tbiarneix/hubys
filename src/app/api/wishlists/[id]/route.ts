@@ -149,7 +149,7 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   const hasAccess = 
     wishlist.userId === user.id || // Propriétaire
     wishlist.editors.some(editor => editor.id === user.id) || // Éditeur
-    (wishlist.child && wishlist.child.parents.some(parent => parent.id === user.id && wishlist.userId === wishlist.child.id)); // Parent de l'enfant
+    (wishlist.childId && wishlist.child?.parents.some(parent => parent.id === user.id)); // Parent de l'enfant
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

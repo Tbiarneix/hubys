@@ -3,20 +3,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+type Params = {
+  params: Promise<{ id: string; childId: string }>
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string; childId: string } }
+  context: Params
 ) {
-  const { id, childId } = await params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.id !== id) {
+    if (!session?.user?.id || session.user.id !== params.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const child = await prisma.child.findUnique({
       where: {
-        id: childId,
+        id: params.childId,
       },
       include: {
         parents: true,
@@ -28,7 +32,7 @@ export async function GET(
     }
 
     // Vérifier que l'utilisateur est bien un parent de l'enfant
-    if (!child.parents.some((parent: { id: string }) => parent.id === id)) {
+    if (!child.parents.some((parent: { id: string }) => parent.id === params.id)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -41,21 +45,20 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; childId: string } }
+  context: Params
 ) {
-  const { id, childId } = await params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.id !== id) {
+    if (!session?.user?.id || session.user.id !== params.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const { deleteCompletely } = await request.json();
 
-    // Récupérer l'enfant avec ses parents
     const child = await prisma.child.findUnique({
       where: {
-        id: childId,
+        id: params.childId,
       },
       include: {
         parents: true,
@@ -66,36 +69,32 @@ export async function DELETE(
       return new NextResponse("Child not found", { status: 404 });
     }
 
-    // Vérifier que l'utilisateur est bien un parent de l'enfant
-    if (!child.parents.some((parent: { id: string }) => parent.id === id)) {
+    if (!child.parents.some((parent: { id: string }) => parent.id === params.id)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     if (deleteCompletely) {
-      // Suppression complète de l'enfant
       await prisma.child.delete({
         where: {
-          id: childId,
+          id: params.childId,
         },
       });
     } else {
-      // Si c'est le seul parent, on supprime l'enfant
       if (child.parents.length <= 1) {
         await prisma.child.delete({
           where: {
-            id: childId,
+            id: params.childId,
           },
         });
       } else {
-        // Sinon on retire juste la relation avec ce parent
         await prisma.child.update({
           where: {
-            id: childId,
+            id: params.childId,
           },
           data: {
             parents: {
               disconnect: {
-                id: id
+                id: params.id
               }
             }
           },

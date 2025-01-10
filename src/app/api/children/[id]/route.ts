@@ -3,11 +3,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -16,7 +20,7 @@ export async function GET(
 
     const child = await prisma.child.findUnique({
       where: {
-        id: id,
+        id: params.id,
       },
       include: {
         parents: {
@@ -40,8 +44,7 @@ export async function GET(
       return new NextResponse("Child not found", { status: 404 });
     }
 
-    // Vérifier que l'utilisateur est bien un parent de l'enfant
-    if (!child.parents.some(parent => parent.id === session.user.id)) {
+    if (!child.parents.some((parent: { id: string }) => parent.id === session.user.id)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

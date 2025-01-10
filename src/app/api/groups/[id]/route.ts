@@ -3,9 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 // GET /api/groups/[id] - Récupérer un groupe spécifique
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function GET(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -80,8 +87,11 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
 }
 
 // POST /api/groups/[id]/messages - Ajouter un message au groupe
-export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function POST(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -100,7 +110,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { content } = await req.json();
+    const { content } = await request.json();
 
     const message = await prisma.groupMessage.create({
       data: {

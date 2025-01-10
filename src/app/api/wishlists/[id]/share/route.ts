@@ -11,17 +11,22 @@ interface Parent {
   id: string;
 }
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
-    const { id: wishlistId } = await params;
+    const { id: wishlistId } = params;
 
     const wishlist = await prisma.wishList.findUnique({
       where: { id: wishlistId },

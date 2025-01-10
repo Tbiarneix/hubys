@@ -2,32 +2,20 @@ import LocationClient from "./LocationClient";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
-interface LocationPageProps {
-  params: {
-    id: string;
-    eventId: string;
-  };
-}
-
-interface User {
-  id: string;
-  name: string;
-}
-
 interface GroupMember {
   id: string;
   userId: string;
   user: {
-    name: string;
+    name: string | null;
     children: Array<{
       id: string;
       firstName: string;
     }>;
     sentInvitations: Array<{
-      toUser: User;
+      toUser: { id: string; name: string | null } | null;
     }>;
     receivedInvitations: Array<{
-      fromUser: User;
+      fromUser: { id: string; name: string | null } | null;
     }>;
   };
 }
@@ -44,17 +32,22 @@ interface Subgroup {
   }>;
 }
 
-async function getData({ id, eventId }: { id: string; eventId: string }) {
+type Params = {
+  params: Promise<{ id: string; eventId: string }>
+}
+
+async function getData(context: Params) {
+  const params = await context.params;
   const event = await prisma.event.findUnique({
     where: {
-      id: eventId,
-      groupId: id,
+      id: params.eventId,
+      groupId: params.id,
     },
     include: {
       locations: {
         include: {
-          votes: true,
-        },
+          votes: true
+        }
       },
       group: {
         include: {
@@ -64,20 +57,12 @@ async function getData({ id, eventId }: { id: string; eventId: string }) {
                 include: {
                   children: true,
                   sentInvitations: {
-                    where: {
-                      status: 'ACCEPTED'
-                    },
-                    include: {
-                      toUser: true
-                    }
+                    where: { status: 'ACCEPTED' },
+                    include: { toUser: true }
                   },
                   receivedInvitations: {
-                    where: {
-                      status: 'ACCEPTED'
-                    },
-                    include: {
-                      fromUser: true
-                    }
+                    where: { status: 'ACCEPTED' },
+                    include: { fromUser: true }
                   }
                 }
               }
@@ -89,11 +74,11 @@ async function getData({ id, eventId }: { id: string; eventId: string }) {
   });
 
   if (!event) {
-    redirect(`/groups/${id}`);
+    redirect(`/groups/${params.id}`);
   }
 
   if (!event.hasLocation) {
-    redirect(`/groups/${id}/events/${eventId}`);
+    redirect(`/groups/${params.id}/events/${params.eventId}`);
   }
 
   // Regrouper les membres en sous-groupes (couples/familles)
@@ -106,8 +91,8 @@ async function getData({ id, eventId }: { id: string; eventId: string }) {
     return {
       id: member.id,
       adults: [
-        { id: member.userId, name: member.user.name },
-        ...(partner ? [{ id: partner.id, name: partner.name }] : []),
+        { id: member.userId, name: member.user.name || 'Sans nom' },
+        ...(partner ? [{ id: partner.id, name: partner.name || 'Sans nom' }] : []),
       ],
       children: member.user.children.map(child => ({
         id: child.id,
@@ -133,13 +118,16 @@ async function getData({ id, eventId }: { id: string; eventId: string }) {
     subgroups: uniqueSubgroups,
     settings: {
       adultShare: event.adultShare,
-      childShare: event.childShare,
+      childShare: event.childShare
     }
   };
 }
 
-export default async function LocationPage({ params }: LocationPageProps) {
-  const data = await getData(params);
+export default async function LocationPage({ 
+  params 
+}: Params) {
+  const { eventId, id } = await params;
+  const data = await getData({ params });
 
-  return <LocationClient initialData={data} eventId={params.eventId} groupId={params.id} />;
+  return <LocationClient initialData={data} eventId={eventId} groupId={id} />;
 }

@@ -85,7 +85,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
               select: {
                 id: true,
                 name: true,
-                image: true,
+                avatar: true,
               },
             },
           },

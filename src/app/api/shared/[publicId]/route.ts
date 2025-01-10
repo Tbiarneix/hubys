@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(request: Request, props: { params: Promise<{ publicId: string }> }) {
-  const params = await props.params;
+type Params = {
+  params: Promise<{ publicId: string }>
+}
+
+export async function GET(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const wishlist = await prisma.wishList.findUnique({
       where: { publicId: params.publicId },

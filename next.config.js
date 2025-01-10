@@ -20,14 +20,24 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-    ],
-    domains: [
-      'api.homeexchange.com',
-      'imagedelivery.net',
-      'a0.muscache.com',
-      'www.airbnb.com',
-      'www.airbnb.fr',
-      'tripadvisor.com',
+      {
+        protocol: 'https',
+        hostname: 'api.homeexchange.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'tripadvisor.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {

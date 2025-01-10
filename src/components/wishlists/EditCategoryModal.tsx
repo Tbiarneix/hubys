@@ -136,7 +136,7 @@ export function EditCategoryModal({ isOpen, onClose, onEdit, onDelete, category 
         onClose={() => setIsDeleteConfirmationOpen(false)}
         onConfirm={handleDelete}
         title="Supprimer la catégorie"
-        message="Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible et supprimera tous les items de la catégorie."
+        description="Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible et supprimera tous les items de la catégorie."
       />
     </>
   );

@@ -4,9 +4,13 @@ import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 
 // DELETE /api/groups/[id]/messages/[messageId] - Supprimer un message
+type Params = {
+  params: Promise<{ id: string; messageId: string }>
+}
+
 export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string; messageId: string }> }
+  request: Request,
+  context: Params
 ) {
   try {
     const session = await getServerSession(authOptions);

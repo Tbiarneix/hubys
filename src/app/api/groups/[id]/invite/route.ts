@@ -6,9 +6,16 @@ import { randomBytes } from 'crypto';
 import { addDays } from 'date-fns';
 import { sendEmail } from '@/lib/email';
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 // POST /api/groups/[id]/invite - Créer une invitation
-export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function POST(
+  request: Request,
+  context: Params
+) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -32,7 +39,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     let email: string | undefined;
     
     try {
-      const body = await req.json();
+      const body = await request.json();
       email = body.email;
     } catch (error) {
       // Si pas de body ou body invalide, on continue sans email

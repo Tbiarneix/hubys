@@ -145,6 +145,7 @@ model Event {
   childShare    Float    @default(0.5)
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   locations     Location[]
+  subgroups     Subgroup[]
 
   @@index([groupId])
 }
@@ -265,4 +266,18 @@ model SecretSantaAssignment {
   @@index([secretSantaId])
   @@index([giverId])
   @@index([receiverId])
+}
+
+model Subgroup {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  adults        String[] // Liste des IDs des utilisateurs adultes
+  children      String[] // Liste des IDs des enfants
+  activeAdults  String[] // Liste des IDs des utilisateurs adultes actifs
+  activeChildren String[] // Liste des IDs des enfants actifs
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([eventId])
 }

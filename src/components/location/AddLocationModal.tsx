@@ -46,8 +46,8 @@ export function AddLocationModal({ isOpen, setIsOpen, eventId }: AddLocationModa
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="mx-auto max-w-sm rounded-lg bg-white p-6">
-          <Dialog.Title className="text-lg font-medium mb-4">
+        <Dialog.Panel className="mx-auto w-96 max-w-sm rounded-lg bg-white p-6">
+          <Dialog.Title className="text-lg font-medium mb-4 text-gray-800">
             Ajouter une location
           </Dialog.Title>
 

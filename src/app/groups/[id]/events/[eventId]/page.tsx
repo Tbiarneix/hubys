@@ -2,8 +2,9 @@ import prisma from "@/lib/prisma";
 import { Users } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { SubgroupCard } from "./SubgroupCard";
+import { PresenceCalendar } from "@/components/PresenceCalendar";
 import { redirect } from "next/navigation";
+import { SubgroupCard } from "./SubgroupCard";
 
 interface EventPageProps {
   params: Promise<{
@@ -81,6 +82,13 @@ export default async function EventPage(props: EventPageProps) {
           ))}
         </div>
       </div>
+      <PresenceCalendar
+        startDate={event.startDate}
+        endDate={event.endDate}
+        subgroups={event.subgroups}
+        userMap={userMap}
+        currentUserId={session.user.id}
+      />
     </div>
   );
 }

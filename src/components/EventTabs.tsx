@@ -53,14 +53,6 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
             Location
           </Link>
         )}
-        {event.hasCalendar && (
-          <Link
-            href={`${basePath}/calendar`}
-            className={tabStyle(pathname.includes("/calendar"))}
-          >
-            Calendrier des présences
-          </Link>
-        )}
         {event.hasMenus && (
           <Link
             href={`${basePath}/menus`}

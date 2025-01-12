@@ -145,7 +145,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         hasLocation: options?.location ?? true,
-        hasCalendar: options?.calendar ?? true,
+        hasCalendar: true,
         hasMenus: options?.menus ?? true,
         hasShopping: options?.shopping ?? true,
         hasActivities: options?.activities ?? true,

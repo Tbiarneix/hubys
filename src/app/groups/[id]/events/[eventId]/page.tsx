@@ -88,6 +88,7 @@ export default async function EventPage(props: EventPageProps) {
         subgroups={event.subgroups}
         userMap={userMap}
         currentUserId={session.user.id}
+        eventId={params.eventId}
       />
     </div>
   );

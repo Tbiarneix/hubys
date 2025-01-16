@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -146,6 +149,7 @@ model Event {
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   locations     Location[]
   subgroups     Subgroup[]
+  presences     SubgroupPresence[]
 
   @@index([groupId])
 }
@@ -278,6 +282,25 @@ model Subgroup {
   activeChildren String[] // Liste des IDs des enfants actifs
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  presences     SubgroupPresence[]
 
   @@index([eventId])
+}
+
+model SubgroupPresence {
+  id          String   @id @default(cuid())
+  date        DateTime
+  lunch       Boolean  @default(false)
+  dinner      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subgroupId  String
+  eventId     String
+  subgroup    Subgroup @relation(fields: [subgroupId], references: [id], onDelete: Cascade)
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([subgroupId, eventId, date])
+  @@index([subgroupId])
+  @@index([eventId])
+  @@index([date])
 }

@@ -19,7 +19,6 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
   const router = useRouter();
   const [options, setOptions] = useState({
     location: true,
-    calendar: true,
     menus: true,
     shopping: true,
     activities: true,
@@ -70,7 +69,6 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
 
   const optionLabels: Record<string, string> = {
     location: 'Location',
-    calendar: 'Calendrier des présences',
     menus: 'Menus',
     shopping: 'Liste de courses',
     activities: 'Activités',

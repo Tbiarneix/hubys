@@ -79,10 +79,10 @@ export function SubgroupCard({ subgroup, userMap, currentUserId, eventId, groupI
             <User className="w-4 h-4 text-gray-700" />
             <h3 className="font-medium space-x-2 text-gray-700">
               {subgroup.activeAdults.map((userId, index) => (
-                <>
+                <span key={userId}>
                   {index > 0 && <span key={`sep-${userId}`}> & </span>}
                   <span key={userId}>{userMap.get(userId)?.name || 'Sans nom'}</span>
-                </>
+                </span>
               ))}
               {subgroup.activeAdults.length === 0 && (
                 <span className="text-gray-500">Aucun adulte actif</span>
@@ -174,10 +174,10 @@ export function SubgroupCard({ subgroup, userMap, currentUserId, eventId, groupI
                         .flatMap(u => u.children)
                         .find(c => c.id === childId);
                       return (
-                        <>
+                        <span key={childId}>
                           {index > 0 && ", "}
                           <span key={childId}>{child?.firstName || 'Sans nom'}</span>
-                        </>
+                        </span>
                       );
                     })}
                   </>

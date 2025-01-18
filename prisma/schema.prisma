@@ -115,16 +115,20 @@ model PartnerInvitation {
 }
 
 model Group {
-  id            String              @id @default(cuid())
-  name          String
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  deletionVotes GroupDeletionVote[]
-  invitations   GroupInvitation[]
-  members       GroupMember[]
-  messages      GroupMessage[]
-  secretSantas  SecretSanta[]
-  events        Event[]
+  id              String              @id @default(cuid())
+  name            String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletionVotes   GroupDeletionVote[]
+  invitations     GroupInvitation[]
+  members         GroupMember[]
+  messages        GroupMessage[]
+  secretSantas    SecretSanta[]
+  events          Event[]
+  showEvents      Boolean  @default(true)
+  showSecretSanta Boolean  @default(true)
+  showRecipes     Boolean  @default(true)
+  showCalendar    Boolean  @default(true)
 
   @@unique([name])
 }

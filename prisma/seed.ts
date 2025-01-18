@@ -29,14 +29,7 @@ const ITEMS = [
 async function main() {
   const hashedPassword = await hash(COMMON_PASSWORD, 10);
 
-  // Create the family group
-  const familyGroup = await prisma.group.create({
-    data: {
-      name: 'Famille'
-    }
-  });
-
-  // Create adult users
+  // 1. Create adult users
   const adults = await Promise.all(
     ADULT_NAMES.map(async (name, index) => {
       const user = await prisma.user.create({
@@ -46,19 +39,13 @@ async function main() {
           name,
           bio: `Je suis ${name}, membre de la famille.`,
           birthDate: new Date(1980 + index, 0, 1),
-          groupMemberships: {
-            create: {
-              groupId: familyGroup.id,
-              role: 'MEMBER'
-            }
-          }
         }
       });
       return user;
     })
   );
 
-  // Create children
+  // 2. Create children
   const children = await Promise.all(
     CHILD_NAMES.map(async (name, index) => {
       const child = await prisma.child.create({
@@ -71,7 +58,7 @@ async function main() {
     })
   );
 
-  // Set up family relationships
+  // 3. Set up family relationships
   // First couple with 2 children
   await prisma.partnerInvitation.create({
     data: {
@@ -118,7 +105,7 @@ async function main() {
     data: { parents: { connect: [{ id: adults[4].id }] } }
   });
 
-  // Create wishlists for all users
+  // 4. Create wishlists for all users
   // For adults
   for (const adult of adults) {
     const wishlist = await prisma.wishList.create({
@@ -204,6 +191,77 @@ async function main() {
       }
     }
   }
+
+  // 5. Create the family group with first user as admin and add all other users
+  const familyGroup = await prisma.group.create({
+    data: {
+      name: 'Famille',
+      members: {
+        create: [
+          { userId: adults[0].id, role: 'ADMIN' },
+          ...adults.slice(1).map(adult => ({
+            userId: adult.id,
+            role: 'MEMBER'
+          }))
+        ]
+      }
+    }
+  });
+
+  console.log(`Created family group with ID: ${familyGroup.id}`);
+
+  // 6. Create Croatia 2025 event
+  // const croatiaEvent = await prisma.event.create({
+  //   data: {
+  //     name: 'Croatie 2025',
+  //     groupId: familyGroup.id,
+  //     startDate: new Date('2025-04-14'),
+  //     endDate: new Date('2025-04-20'),
+  //     hasLocation: true,
+  //     hasCalendar: true,
+  //     hasMenus: true,
+  //     hasShopping: true,
+  //     hasActivities: true,
+  //     hasPhotos: true,
+  //     hasAccounts: true,
+  //   }
+  // });
+
+  // 7. Add locations for Croatia event
+  // const locations = [
+  //   {
+  //     url: 'https://www.airbnb.fr/rooms/43685900?search_mode=regular_search&check_in=2025-04-14&check_out=2025-04-20&source_impression_id=p3_1737145771_P3APow5dzo-aPl_j&previous_page_section_name=1000&federated_search_id=22339ebe-792d-48a3-a6de-0b22d6110840',
+  //     amount: 650,
+  //     title: 'Location Airbnb 1',
+  //     image: 'https://a0.muscache.com/im/pictures/miso/Hosting-43685900/original/ec85ccc0-281c-44fc-a061-bc7e3f4fc4d6.jpeg',
+  //   },
+  //   {
+  //     url: 'https://www.airbnb.fr/rooms/13253519?search_mode=regular_search&check_in=2025-04-14&check_out=2025-04-20&source_impression_id=p3_1737145771_P3vT2kFMvFHtB481&previous_page_section_name=1000&federated_search_id=22339ebe-792d-48a3-a6de-0b22d6110840',
+  //     amount: 1267,
+  //     title: 'Location Airbnb 2',
+  //     image: 'https://a0.muscache.com/im/pictures/0e1dcaab-7c53-4ff9-8b94-eb4a5c1f2db9.jpg',
+  //   },
+  //   {
+  //     url: 'https://www.airbnb.fr/rooms/649596746145899597?search_mode=regular_search&check_in=2025-04-14&check_out=2025-04-20&source_impression_id=p3_1737145771_P3usmzjzKnEbD6S3&previous_page_section_name=1000&federated_search_id=22339ebe-792d-48a3-a6de-0b22d6110840',
+  //     amount: 897,
+  //     title: 'Location Airbnb 3',
+  //     image: 'https://a0.muscache.com/im/pictures/miso/Hosting-649596746145899597/original/a0a87f7e-a150-4f8c-a933-0c9e5c380a0b.jpeg',
+  //   }
+  // ];
+
+  // for (const location of locations) {
+  //   await prisma.location.create({
+  //     data: {
+  //       eventId: croatiaEvent.id,
+  //       url: location.url,
+  //       amount: location.amount,
+  //       title: location.title,
+  //       image: location.image,
+  //       createdBy: adults[0].id,
+  //       createdAt: new Date(),
+  //     }
+  //   });
+  // }
 }
 
 main()

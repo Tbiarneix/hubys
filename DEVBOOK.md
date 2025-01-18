@@ -38,20 +38,21 @@
 - [x] Interface de groupe
   - [x] Liste des membres
   - [x] Chat de groupe
-- [ ] Implémentation du Secret Santa
-  - [ ] Algorithme de tirage au sort
-  - [ ] Interface de révélation
-- [ ] Gestion des événements de groupe
+- [x] Implémentation du Secret Santa
+  - [x] Algorithme de tirage au sort
+  - [x] Interface de révélation
+- [x] Gestion des événements de groupe
+- [x] Gestion du livre de recettes
 
 ## Gestion des Événements
-- [ ] Interface principale des événements
-- [ ] Module de choix de location
-  - [ ] Système de vote
-  - [ ] Calcul des parts
-  - [ ] Gestion des sous-groupes
-- [ ] Calendrier des présences
-  - [ ] Vue midi/soir
-  - [ ] Gestion famille
+- [x] Interface principale des événements
+- [x] Module de choix de location
+  - [x] Système de vote
+  - [x] Calcul des parts
+  - [x] Gestion des sous-groupes
+- [x] Calendrier des présences
+  - [x] Vue midi/soir
+  - [x] Gestion famille
 - [ ] Système de menus
   - [ ] CRUD des repas
   - [ ] Liaison avec la liste de courses

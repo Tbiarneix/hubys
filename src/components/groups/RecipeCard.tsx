@@ -61,9 +61,6 @@ export default function RecipeCard({
             </Link>
           </div>
         </div>
-        <div className="text-center py-12">
-          <p className="text-gray-500">Aucune recette ajoutée pour le moment</p>
-        </div>
       </div>
     );
   }

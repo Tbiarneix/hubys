@@ -15,8 +15,9 @@ const recipeSchema = z.object({
   url: z.string().url().nullable(),
   description: z.string().nullable(),
   servings: z.number().min(1, "Le nombre de parts doit être au moins 1"),
-  steps: z.array(z.string()).min(1, "Au moins une étape est requise"),
-  ingredients: z.array(ingredientSchema).min(1, "Au moins un ingrédient est requis"),
+  steps: z.array(z.string()).optional().default([]),
+  category: z.enum(["STARTER", "MAIN", "DESSERT", "SIDE", "BREAKFAST", "SNACK", "DRINK", "OTHER"]).default("OTHER"),
+  ingredients: z.array(ingredientSchema).optional().default([]),
 });
 
 type Params = {
@@ -109,6 +110,7 @@ export async function POST(
         description: body.description,
         servings: body.servings,
         steps: body.steps,
+        category: body.category,
         group: {
           connect: { id: groupId },
         },

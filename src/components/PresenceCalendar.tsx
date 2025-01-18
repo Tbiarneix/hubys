@@ -4,7 +4,7 @@ import { format, eachDayOfInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
-import { X, Pencil, Check } from "lucide-react";
+import { X, Pencil, Check, ChevronUp, ChevronDown } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -15,6 +15,8 @@ interface Presence {
   date: string;
   lunch: boolean;
   dinner: boolean;
+  lunchNumber: number;
+  dinnerNumber: number;
   subgroupId: string;
   eventId: string;
 }
@@ -70,42 +72,109 @@ export function PresenceCalendar({
     fetchPresences();
   }, [eventId]);
 
-  const togglePresence = async (subgroupId: string, date: Date, type: PresenceType) => {
+  const isPresent = (subgroupId: string, date: Date, type: PresenceType): boolean => {
+    const presence = presences.find(p => 
+      p.subgroupId === subgroupId && 
+      new Date(p.date).toDateString() === date.toDateString()
+    );
+    return presence ? presence[type] : false;
+  };
+
+  const getPresenceNumber = (subgroupId: string, date: Date, type: PresenceType): number => {
+    const presence = presences.find(p => 
+      p.subgroupId === subgroupId && 
+      new Date(p.date).toDateString() === date.toDateString()
+    );
+    return presence ? (type === 'lunch' ? presence.lunchNumber : presence.dinnerNumber) : 0;
+  };
+
+  const handlePresenceChange = async (subgroupId: string, date: Date, type: PresenceType) => {
     try {
-      const response = await axios.put(`/api/events/${eventId}/presences`, {
-        subgroupId,
-        date: date.toISOString(),
-        type,
+      const response = await fetch(`/api/events/${eventId}/presences/toggle`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subgroupId,
+          date: date.toISOString(),
+          type,
+        }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error('Failed to update presence');
+      }
+
+      const updatedPresence = await response.json();
+
       // Mettre à jour l'état local
       setPresences(prev => {
         const newPresences = [...prev];
         const index = newPresences.findIndex(p => 
           p.subgroupId === subgroupId && 
-          new Date(p.date).toISOString().split('T')[0] === date.toISOString().split('T')[0]
+          new Date(p.date).toDateString() === date.toDateString()
         );
         
         if (index !== -1) {
-          newPresences[index] = response.data;
+          newPresences[index] = updatedPresence;
         } else {
-          newPresences.push(response.data);
+          newPresences.push(updatedPresence);
         }
         
         return newPresences;
       });
     } catch (error) {
-      console.error("Failed to update presence:", error);
-      toast.error("Erreur lors de la mise à jour de la présence");
+      console.error('Error updating presence:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour des présences');
     }
   };
 
-  const isPresent = (subgroupId: string, date: Date, type: PresenceType): boolean => {
-    const presence = presences.find(p => 
-      p.subgroupId === subgroupId && 
-      new Date(p.date).toISOString().split('T')[0] === date.toISOString().split('T')[0]
-    );
-    return presence ? presence[type] : false;
+  const handleNumberAdjustment = async (subgroupId: string, date: Date, type: PresenceType, increment: boolean) => {
+    try {
+      const presence = presences.find(p => 
+        p.subgroupId === subgroupId && 
+        new Date(p.date).toDateString() === date.toDateString()
+      );
+
+      if (!presence || !presence[type]) return;
+
+      const currentNumber = type === 'lunch' ? presence.lunchNumber : presence.dinnerNumber;
+      const newNumber = increment ? currentNumber + 1 : Math.max(0, currentNumber - 1);
+
+      const response = await fetch(`/api/events/${eventId}/presences/adjust`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subgroupId,
+          date: date.toISOString(),
+          type,
+          number: newNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update presence number');
+      }
+
+      const updatedPresence = await response.json();
+
+      // Mettre à jour l'état local
+      setPresences(prev => prev.map(p => {
+        if (
+          p.subgroupId === subgroupId && 
+          new Date(p.date).toDateString() === date.toDateString()
+        ) {
+          return updatedPresence;
+        }
+        return p;
+      }));
+    } catch (error) {
+      console.error('Error updating presence number:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour du nombre de présents');
+    }
   };
 
   if (isLoading) {
@@ -213,7 +282,6 @@ export function PresenceCalendar({
               <React.Fragment key={`${subgroup.id}`}>
                 {days.map((day) => {
                   const isEditing = editingSubgroupId === subgroup.id;
-                  const nbPersons = subgroup.activeAdults.length + subgroup.activeChildren.length;
                   const canEdit = subgroup.activeAdults.includes(currentUserId) || 
                     subgroup.activeChildren.includes(currentUserId);
 
@@ -222,7 +290,7 @@ export function PresenceCalendar({
                       <div
                         key={`${day.toISOString()}-lunch`}
                         className={cn(
-                          "h-8 border flex items-center justify-center",
+                          "h-8 border flex items-center justify-center relative",
                           isEditing 
                             ? "cursor-pointer bg-yellow-50 hover:bg-yellow-100"
                             : [
@@ -232,7 +300,7 @@ export function PresenceCalendar({
                         )}
                         onClick={() => {
                           if (isEditing && canEdit) {
-                            togglePresence(subgroup.id, day, 'lunch');
+                            handlePresenceChange(subgroup.id, day, 'lunch');
                           }
                         }}
                       >
@@ -243,18 +311,42 @@ export function PresenceCalendar({
                             <X className="w-4 h-4 text-red-600" />
                           )
                         ) : (
-                          <span className={cn(
-                            "bold",
-                            isEditing ? "text-gray-900" : "text-white"
-                          )}>
-                            {isPresent(subgroup.id, day, 'lunch') ? nbPersons : ""}
-                          </span>
+                          <div className="relative flex items-center justify-center space-x-1">
+                            {isPresent(subgroup.id, day, 'lunch') && canEdit && !isEditing && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNumberAdjustment(subgroup.id, day, 'lunch', false);
+                                }}
+                                className="text-white"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            )}
+                            <span className={cn(
+                              "bold min-w-[20px] text-center",
+                              isEditing ? "text-gray-900" : "text-white"
+                            )}>
+                              {isPresent(subgroup.id, day, 'lunch') ? getPresenceNumber(subgroup.id, day, 'lunch') : ""}
+                            </span>
+                            {isPresent(subgroup.id, day, 'lunch') && canEdit && !isEditing && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNumberAdjustment(subgroup.id, day, 'lunch', true);
+                                }}
+                                className="text-white"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                       <div
                         key={`${day.toISOString()}-dinner`}
                         className={cn(
-                          "h-8 border flex items-center justify-center",
+                          "h-8 border flex items-center justify-center relative",
                           isEditing 
                             ? "cursor-pointer bg-yellow-50 hover:bg-yellow-100"
                             : [
@@ -264,7 +356,7 @@ export function PresenceCalendar({
                         )}
                         onClick={() => {
                           if (isEditing && canEdit) {
-                            togglePresence(subgroup.id, day, 'dinner');
+                            handlePresenceChange(subgroup.id, day, 'dinner');
                           }
                         }}
                       >
@@ -275,12 +367,36 @@ export function PresenceCalendar({
                             <X className="w-4 h-4 text-red-600" />
                           )
                         ) : (
-                          <span className={cn(
-                            "bold",
-                            isEditing ? "text-gray-900" : "text-white"
-                          )}>
-                            {isPresent(subgroup.id, day, 'dinner') ? nbPersons : ""}
-                          </span>
+                          <div className="relative flex items-center justify-center space-x-1">
+                            {isPresent(subgroup.id, day, 'dinner') && canEdit && !isEditing && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNumberAdjustment(subgroup.id, day, 'dinner', false);
+                                }}
+                                className="text-white"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            )}
+                            <span className={cn(
+                              "bold min-w-[20px] text-center",
+                              isEditing ? "text-gray-900" : "text-white"
+                            )}>
+                              {isPresent(subgroup.id, day, 'dinner') ? getPresenceNumber(subgroup.id, day, 'dinner') : ""}
+                            </span>
+                            {isPresent(subgroup.id, day, 'dinner') && canEdit && !isEditing && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNumberAdjustment(subgroup.id, day, 'dinner', true);
+                                }}
+                                className="text-white"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </>
@@ -292,9 +408,9 @@ export function PresenceCalendar({
             <div className="col-span-full border-t-2 border-gray-300" />
             {days.map((day) => {
               const totalLunch = subgroups.reduce((acc, subgroup) => 
-                acc + (isPresent(subgroup.id, day, 'lunch') ? subgroup.activeAdults.length + subgroup.activeChildren.length : 0), 0);
+                acc + getPresenceNumber(subgroup.id, day, 'lunch'), 0);
               const totalDinner = subgroups.reduce((acc, subgroup) => 
-                acc + (isPresent(subgroup.id, day, 'dinner') ? subgroup.activeAdults.length + subgroup.activeChildren.length : 0), 0);
+                acc + getPresenceNumber(subgroup.id, day, 'dinner'), 0);
               return (
                 <React.Fragment key={`total-${day.toISOString()}`}>
                   <div className="h-8 border flex items-center justify-center bg-white font-medium text-gray-900">

@@ -33,6 +33,8 @@ model User {
   receiverAssignments  SecretSantaAssignment[] @relation("ReceiverAssignments")
   locationVotes        LocationVote[]
   partneredMembers     GroupMember[]       @relation("GroupMemberPartner")
+  recipes              Recipe[]
+  recipeFavorites      RecipeFavorite[]
 }
 
 model WishList {
@@ -125,6 +127,7 @@ model Group {
   messages        GroupMessage[]
   secretSantas    SecretSanta[]
   events          Event[]
+  recipes         Recipe[]
   showEvents      Boolean  @default(true)
   showSecretSanta Boolean  @default(true)
   showRecipes     Boolean  @default(true)
@@ -307,4 +310,62 @@ model SubgroupPresence {
   @@index([subgroupId])
   @@index([eventId])
   @@index([date])
+}
+
+enum Unit {
+  NONE
+  GRAM
+  KILOGRAM
+  MILLILITER
+  CENTILITER
+  LITER
+  SPOON
+  BUNCH
+  PACK
+}
+
+model Recipe {
+  id          String       @id @default(cuid())
+  name        String
+  url         String?
+  description String?
+  servings    Int
+  steps       String[]
+  groupId     String
+  authorId    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ingredients Ingredient[]
+  favorites   RecipeFavorite[]
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author      User         @relation(fields: [authorId], references: [id])
+
+  @@index([groupId])
+  @@index([authorId])
+}
+
+model Ingredient {
+  id        String   @id @default(cuid())
+  name      String
+  quantity  Float
+  unit      Unit?
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recipeId])
+}
+
+model RecipeFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recipeId])
+  @@index([userId])
+  @@index([recipeId])
 }

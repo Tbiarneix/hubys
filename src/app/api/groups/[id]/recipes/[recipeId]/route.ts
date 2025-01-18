@@ -169,8 +169,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; recipeId: string } }
+  context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

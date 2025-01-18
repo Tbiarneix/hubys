@@ -9,6 +9,7 @@ export interface GroupMember {
     avatar: string | null;
   };
   joinedAt: string;
+  role: string;
 }
 
 export interface GroupInvitation {
@@ -59,9 +60,14 @@ export interface Group {
   id: string;
   name: string;
   createdAt: string;
+  showEvents: boolean;
+  showSecretSanta: boolean;
+  showRecipes: boolean;
+  showCalendar: boolean;
   members: GroupMember[];
   invitations: GroupInvitation[];
   messages: GroupMessage[];
   deletionVotes: string[];
   secretSantas?: SecretSanta[];
+  events?: Event[];
 }

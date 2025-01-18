@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const { name } = await request.json();
+  const { name, cards } = await request.json();
 
   if (!name) {
     return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -123,10 +123,14 @@ export async function POST(request: NextRequest) {
   const group = await prisma.group.create({
     data: {
       name,
+      showEvents: cards?.events ?? true,
+      showSecretSanta: cards?.secretSanta ?? true,
+      showRecipes: cards?.recipes ?? true,
+      showCalendar: cards?.calendar ?? true,
       members: {
         create: {
           userId: user.id,
-          role: 'MEMBER',
+          role: 'ADMIN',
         },
       },
     },

@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import EventTabs from "@/components/EventTabs";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 interface EventLayoutProps {
   children: React.ReactNode;
@@ -40,6 +42,11 @@ export default async function EventLayout(props: EventLayoutProps) {
       <div className="flex h-screen">
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
+            <Link href={`/groups/${params.id}`}
+                  className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour au groupe
+            </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-6">{event.name}</h1>
             {children}
             <EventTabs event={event} groupId={params.id} />

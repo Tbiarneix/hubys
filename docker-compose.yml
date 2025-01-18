@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5433/Hubilys
       - NODE_ENV=development

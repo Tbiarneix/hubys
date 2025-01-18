@@ -60,6 +60,7 @@ export async function GET(
           },
         },
         ingredients: true,
+        favorites: true,
       },
       orderBy: {
         createdAt: "desc",

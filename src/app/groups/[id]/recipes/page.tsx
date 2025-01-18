@@ -16,7 +16,7 @@ export default function RecipesPage() {
   const groupId = params.id as string;
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<RecipeCategory | 'ALL'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<RecipeCategory | 'ALL' | 'FAVORITES'>('ALL');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -68,6 +68,10 @@ export default function RecipesPage() {
       recipe.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.ingredients.some(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
+    if (selectedCategory === 'FAVORITES') {
+      return matchesSearch && recipe.favorites?.some(f => f.userId === session?.user?.id);
+    }
+    
     const matchesCategory = selectedCategory === 'ALL' || recipe.category === selectedCategory;
     
     return matchesSearch && matchesCategory;
@@ -96,6 +100,7 @@ export default function RecipesPage() {
       <RecipeFilters
         onSearch={setSearchQuery}
         onCategoryChange={setSelectedCategory}
+        currentUserId={session?.user?.id}
       />
 
       {isLoading ? (

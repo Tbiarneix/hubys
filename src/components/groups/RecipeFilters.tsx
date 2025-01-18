@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { RecipeCategory } from '@/types/group';
 
+type FilterCategory = RecipeCategory | 'ALL' | 'FAVORITES';
+
 interface RecipeFiltersProps {
   onSearch: (query: string) => void;
-  onCategoryChange: (category: RecipeCategory | 'ALL') => void;
+  onCategoryChange: (category: FilterCategory) => void;
+  currentUserId?: string | null;
 }
 
-const CATEGORIES: { value: RecipeCategory | 'ALL'; label: string }[] = [
+const CATEGORIES: { value: FilterCategory; label: string }[] = [
   { value: 'ALL', label: 'Toutes les recettes' },
+  { value: 'FAVORITES', label: 'Mes favoris' },
   { value: 'STARTER', label: 'Entrées' },
   { value: 'MAIN', label: 'Plats principaux' },
   { value: 'DESSERT', label: 'Desserts' },
@@ -21,9 +25,9 @@ const CATEGORIES: { value: RecipeCategory | 'ALL'; label: string }[] = [
   { value: 'OTHER', label: 'Autres' },
 ];
 
-export default function RecipeFilters({ onSearch, onCategoryChange }: RecipeFiltersProps) {
+export default function RecipeFilters({ onSearch, onCategoryChange, currentUserId }: RecipeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<RecipeCategory | 'ALL'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('ALL');
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -32,10 +36,14 @@ export default function RecipeFilters({ onSearch, onCategoryChange }: RecipeFilt
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const category = e.target.value as RecipeCategory | 'ALL';
+    const category = e.target.value as FilterCategory;
     setSelectedCategory(category);
     onCategoryChange(category);
   };
+
+  const filteredCategories = currentUserId 
+    ? CATEGORIES 
+    : CATEGORIES.filter(cat => cat.value !== 'FAVORITES');
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -56,7 +64,7 @@ export default function RecipeFilters({ onSearch, onCategoryChange }: RecipeFilt
         onChange={handleCategoryChange}
         className="block w-full sm:w-48 px-3 py-2 border border-gray-300 bg-white rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
       >
-        {CATEGORIES.map((category) => (
+        {filteredCategories.map((category) => (
           <option key={category.value} value={category.value}>
             {category.label}
           </option>

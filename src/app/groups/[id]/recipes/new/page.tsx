@@ -69,18 +69,6 @@ export default function NewRecipePage() {
       return;
     }
 
-    if (ingredients.some((i) => !i.name.trim() || i.quantity <= 0)) {
-      toast.error(
-        "Tous les ingrédients doivent avoir un nom et une quantité valide"
-      );
-      return;
-    }
-
-    if (steps.some((s) => !s.trim())) {
-      toast.error("Toutes les étapes doivent être remplies");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -171,7 +159,14 @@ export default function NewRecipePage() {
                 className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
+          </div>
+        </div>
 
+        <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Quelques infos sur la recette ?
+          </h2>
+          <div className="space-y-4">
             <div>
               <label
                 htmlFor="description"
@@ -187,13 +182,12 @@ export default function NewRecipePage() {
                 className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
-
             <div>
               <label
                 htmlFor="servings"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Nombre de parts *
+                Nombre de parts
               </label>
               <input
                 type="number"
@@ -209,7 +203,9 @@ export default function NewRecipePage() {
         </div>
 
         <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold mb-4">Ingrédients *</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Ingrédients
+          </h2>
           <div className="space-y-4">
             {ingredients.map((ingredient, index) => (
               <div key={index} className="flex items-start gap-4">
@@ -287,7 +283,7 @@ export default function NewRecipePage() {
         </div>
 
         <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold mb-4">Étapes *</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">Étapes</h2>
           <div className="space-y-4">
             {steps.map((step, index) => (
               <div key={index} className="flex items-start gap-4">

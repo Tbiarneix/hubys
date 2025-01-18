@@ -5,7 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, UtensilsCrossed, Edit, Trash2, Plus, Minus } from "lucide-react";
+import {
+  ChevronLeft,
+  UtensilsCrossed,
+  Edit,
+  Trash2,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { Recipe } from "@/types/group";
 import { toast } from "sonner";
 
@@ -134,10 +141,26 @@ export default function RecipePage() {
       <div className="space-y-8">
         {recipe.description && (
           <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Description</h2>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">
+              Description
+            </h2>
             <p className="text-gray-600 whitespace-pre-wrap">
               {recipe.description}
             </p>
+          </div>
+        )}
+
+        {recipe.url && (
+          <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Source</h2>
+            <a
+              href={recipe.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Voir la recette originale
+            </a>
           </div>
         )}
 
@@ -146,14 +169,20 @@ export default function RecipePage() {
             <h2 className="text-lg font-semibold text-gray-700">Ingrédients</h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setPortions(prev => prev !== null ? Math.max(1, prev - 1) : null)}
+                onClick={() =>
+                  setPortions((prev) =>
+                    prev !== null ? Math.max(1, prev - 1) : null
+                  )
+                }
                 className="p-1 rounded-md text-gray-600 bg-gray-200 hover:bg-gray-300"
               >
                 <Minus className="h-4 w-4" />
               </button>
               <span className="text-gray-600">{portions} parts</span>
               <button
-                onClick={() => setPortions(prev => prev !== null ? prev + 1 : null)}
+                onClick={() =>
+                  setPortions((prev) => (prev !== null ? prev + 1 : null))
+                }
                 className="p-1 rounded-md text-gray-600 bg-gray-200 hover:bg-gray-300"
               >
                 <Plus className="h-4 w-4" />
@@ -169,7 +198,12 @@ export default function RecipePage() {
                 <span className="font-medium">{ingredient.name}</span>
                 <span className="mx-2">:</span>
                 <span>
-                  {portions !== null ? Math.round(ingredient.quantity * (portions / recipe.servings)) : ingredient.quantity} {ingredient.unit?.toLowerCase()}
+                  {portions !== null
+                    ? Math.round(
+                        ingredient.quantity * (portions / recipe.servings)
+                      )
+                    : ingredient.quantity}{" "}
+                  {ingredient.unit?.toLowerCase()}
                 </span>
               </li>
             ))}
@@ -186,20 +220,6 @@ export default function RecipePage() {
             ))}
           </ol>
         </div>
-
-        {recipe.url && (
-          <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Source</h2>
-            <a
-              href={recipe.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Voir la recette originale
-            </a>
-          </div>
-        )}
 
         <div className="text-sm text-gray-500 mt-8">
           Ajoutée par {recipe.author.name} le{" "}

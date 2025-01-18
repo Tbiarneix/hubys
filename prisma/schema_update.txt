@@ -1,0 +1,54 @@
+// Ajoutez ces modèles à la fin de votre fichier schema.prisma
+
+// Ajoutez cette énumération
+enum Unit {
+  NONE
+  GRAM
+  KILOGRAM
+  MILLILITER
+  CENTILITER
+  LITER
+  SPOON
+  BUNCH
+  PACK
+}
+
+// Ajoutez ces modèles
+model Recipe {
+  id          String       @id @default(cuid())
+  name        String
+  url         String?
+  description String?
+  servings    Int
+  steps       String[]
+  groupId     String
+  authorId    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ingredients Ingredient[]
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author      User         @relation(fields: [authorId], references: [id])
+
+  @@index([groupId])
+  @@index([authorId])
+}
+
+model Ingredient {
+  id        String   @id @default(cuid())
+  name      String
+  quantity  Float
+  unit      Unit?
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recipeId])
+}
+
+// Ajoutez ces relations dans le modèle User existant
+// recipes Recipe[]
+
+// Ajoutez ces champs dans le modèle Group existant
+// showRecipes Boolean @default(true)
+// recipes    Recipe[]

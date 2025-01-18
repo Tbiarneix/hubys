@@ -56,6 +56,47 @@ export interface SecretSantaAssignment {
   };
 }
 
+export type Unit = 'NONE' | 'GRAM' | 'KILOGRAM' | 'MILLILITER' | 'CENTILITER' | 'LITER' | 'SPOON' | 'BUNCH' | 'PACK';
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: Unit | null;
+  recipeId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RecipeCategory = 'STARTER' | 'MAIN' | 'DESSERT' | 'SIDE' | 'BREAKFAST' | 'SNACK' | 'DRINK' | 'OTHER';
+
+export interface RecipeFavorite {
+  id: string;
+  userId: string;
+  recipeId: string;
+  createdAt: string;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  url: string | null;
+  description: string | null;
+  servings: number;
+  steps: string[];
+  groupId: string;
+  authorId: string;
+  category: RecipeCategory;
+  createdAt: string;
+  updatedAt: string;
+  ingredients: Ingredient[];
+  favorites: RecipeFavorite[];
+  author: {
+    id: string;
+    name: string;
+  };
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -70,4 +111,5 @@ export interface Group {
   deletionVotes: string[];
   secretSantas?: SecretSanta[];
   events?: Event[];
+  recipes: Recipe[];
 }

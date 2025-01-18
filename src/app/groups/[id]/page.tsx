@@ -16,6 +16,7 @@ import { EditGroupModal } from '@/components/groups/EditGroupModal';
 import { DeleteGroupModal } from '@/components/groups/DeleteGroupModal';
 import SecretSantaCard from '@/components/groups/SecretSantaCard';
 import EventCard from '@/components/groups/EventCard';
+import RecipeCard from '@/components/groups/RecipeCard';
 import { ChatSidebar } from '@/components/groups/ChatSidebar';
 import {
   DropdownMenu,
@@ -90,6 +91,7 @@ export default function GroupPage() {
 
   useEffect(() => {
     fetchGroup();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, session?.user?.id]);
 
   const handleLaunchSecretSanta = async () => {
@@ -367,6 +369,11 @@ export default function GroupPage() {
                     onRelaunch={handleRelaunchSecretSanta}
                     onCancel={handleCancelSecretSanta}
                   />
+                </div>
+              )}
+              {group.showRecipes && (
+                <div className="col-span-1">
+                  <RecipeCard groupId={id} />
                 </div>
               )}
             </div>

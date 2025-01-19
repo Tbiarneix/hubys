@@ -352,7 +352,7 @@ export function AddMealModal({
                     <option value="BAKERY">Boulangerie</option>
                     <option value="BEVERAGE">Boissons</option>
                     <option value="CONDIMENT">Condiments</option>
-                    <option value="OTHER">Autre</option>
+                    <option value="OTHER">Sans categorie</option>
                   </select>
                   <button
                     type="button"

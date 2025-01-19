@@ -63,6 +63,7 @@ export interface Ingredient {
   name: string;
   quantity: number;
   unit: Unit | null;
+  type: IngredientType;
   recipeId: string;
   createdAt: string;
   updatedAt: string;

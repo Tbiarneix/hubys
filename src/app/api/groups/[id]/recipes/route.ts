@@ -8,6 +8,7 @@ const ingredientSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   quantity: z.number().min(0, "La quantité doit être positive"),
   unit: z.enum(["NONE", "GRAM", "KILOGRAM", "MILLILITER", "CENTILITER", "LITER", "SPOON", "BUNCH", "PACK"]).nullable(),
+  type: z.enum(["VEGETABLE", "FRUIT", "MEAT", "FISH", "DAIRY", "GROCERY", "BAKERY", "BEVERAGE", "CONDIMENT", "OTHER"]).default("OTHER"),
 });
 
 const recipeSchema = z.object({

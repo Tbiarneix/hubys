@@ -334,14 +334,15 @@ model Recipe {
 }
 
 model Ingredient {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
   quantity  Float
   unit      Unit?
+  type      IngredientType @default(OTHER)
   recipeId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  recipe    Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@index([recipeId])
 }

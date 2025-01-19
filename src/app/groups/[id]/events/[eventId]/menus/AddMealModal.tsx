@@ -217,9 +217,10 @@ export function AddMealModal({
                   type="text"
                   id="mealName"
                   value={mealName}
+                  autoComplete="off"
+                  onFocus={() => setShowRecipesList(true)}
                   onChange={(e) => {
                     setMealName(e.target.value);
-                    setShowRecipesList(true);
                     if (selectedRecipe && e.target.value !== selectedRecipe.name) {
                       setSelectedRecipe(null);
                     }
@@ -227,12 +228,12 @@ export function AddMealModal({
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                   placeholder="Entrez le nom du repas"
                 />
-                {showRecipesList && mealName && recipes.length > 0 && (
+                {showRecipesList && recipes.length > 0 && (
                   <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg">
                     <ul className="max-h-60 overflow-auto rounded-md py-1 text-base">
                       {recipes
                         .filter(recipe => 
-                          recipe.name.toLowerCase().includes(mealName.toLowerCase())
+                          !mealName || recipe.name.toLowerCase().includes(mealName.toLowerCase())
                         )
                         .map(recipe => (
                           <li

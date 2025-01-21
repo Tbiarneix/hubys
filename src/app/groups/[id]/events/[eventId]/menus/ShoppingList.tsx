@@ -61,7 +61,7 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
     switch (filterType) {
       case 'menu':
         return allShoppingItems.reduce((groups, item) => {
-          const key = item.menuName ? `${item.menuName} (${format(item.menuDate, "EEE d", { locale: fr })} - ${item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})` : 'Sans menu';
+          const key = item.menuName ? `${item.menuName} (${item.menuDate ? format(item.menuDate, "EEE d", { locale: fr }) : 'Sans date'} - ${item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})` : 'Sans menu';
           return {
             ...groups,
             [key]: [...(groups[key] || []), item]
@@ -425,7 +425,7 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
                         )}>{item.name}</p>
                         {filterType !== 'menu' && item.menuName && (
                           <p className="text-sm text-gray-500">
-                            {item.menuName} ({format(item.menuDate, "EEE d", { locale: fr })} - {item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})
+                            {item.menuName} ({item.menuDate ? format(item.menuDate, "EEE d", { locale: fr }) : 'Sans date'} - {item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})
                           </p>
                         )}
                       </div>

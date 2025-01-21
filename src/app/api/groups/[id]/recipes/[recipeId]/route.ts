@@ -142,7 +142,10 @@ export async function PUT(
           servings: body.servings,
           steps: body.steps,
           ingredients: {
-            create: body.ingredients,
+            create: body.ingredients.map((ingredient) => ({
+              ...ingredient,
+              userId: session.user.id,
+            })),
           },
         },
         include: {

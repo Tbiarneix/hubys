@@ -119,7 +119,10 @@ export async function POST(
           connect: { id: session.user.id },
         },
         ingredients: {
-          create: body.ingredients,
+          create: body.ingredients.map((ingredient) => ({
+            ...ingredient,
+            userId: session.user.id,
+          })),
         },
       },
       include: {

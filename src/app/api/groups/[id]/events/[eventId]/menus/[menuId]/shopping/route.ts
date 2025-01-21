@@ -2,26 +2,32 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { Params } from "@/types/params";
+
+type Params = {
+  params: Promise<{
+    id: string;
+    eventId: string;
+    menuId: string;
+  }>;
+};
 
 // Récupérer tous les items de la liste de courses d'un menu
 export async function GET(
   request: NextRequest,
   context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id: groupId, eventId, menuId } = context.params;
-
     // Vérifier que l'utilisateur est membre du groupe
     const member = await prisma.groupMember.findUnique({
       where: {
         groupId_userId: {
-          groupId,
+          groupId: params.id,
           userId: session.user.id,
         },
       },
@@ -31,9 +37,9 @@ export async function GET(
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const shoppingItems = await prisma.shoppingItem.findMany({
+    const shoppingItems = await prisma.shoppingItem .findMany({
       where: {
-        menuId,
+        menuId: params.menuId,
       },
     });
 
@@ -52,20 +58,20 @@ export async function POST(
   request: NextRequest,
   context: Params
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id: groupId, eventId, menuId } = context.params;
     const data = await request.json();
 
     // Vérifier que l'utilisateur est membre du groupe
     const member = await prisma.groupMember.findUnique({
       where: {
         groupId_userId: {
-          groupId,
+          groupId: params.id,
           userId: session.user.id,
         },
       },
@@ -77,7 +83,7 @@ export async function POST(
 
     const shoppingItem = await prisma.shoppingItem.create({
       data: {
-        menuId,
+        menuId: params.menuId,
         name: data.name,
         quantity: data.quantity,
         unit: data.unit,

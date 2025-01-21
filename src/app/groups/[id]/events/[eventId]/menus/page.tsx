@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import MenuCalendar from "./MenuCalendar";
-import { Recipe, RecipeCategory, Menu, MealType, Unit } from "@/types/group";
+import { Recipe, RecipeCategory, Menu, MealType, Unit, IngredientType } from "@/types/group";
+import { ShoppingList } from "./ShoppingList";
 
 interface MenusPageProps {
   params: Promise<{
@@ -80,7 +81,20 @@ export default async function MenusPage(props: MenusPageProps) {
               },
             },
           },
-          shoppingItems: true,
+          shoppingItems: {
+            select: {
+              id: true,
+              menuId: true,
+              name: true,
+              quantity: true,
+              unit: true,
+              type: true,
+              checked: true,
+              shoppingListId: true,
+              createdAt: true,
+              updatedAt: true,
+            }
+          },
           user: {
             select: {
               id: true,
@@ -89,6 +103,11 @@ export default async function MenusPage(props: MenusPageProps) {
           },
         },
       },
+      shoppingList: {
+        include: {
+          items: true
+        }
+      }
     },
   });
 
@@ -121,7 +140,8 @@ export default async function MenusPage(props: MenusPageProps) {
         id: ingredient.id,
         name: ingredient.name,
         quantity: ingredient.quantity,
-        unit: ingredient.unit,
+        unit: ingredient.unit as Unit,
+        type: ingredient.type,
         recipeId: ingredient.recipeId,
         createdAt: ingredient.createdAt.toISOString(),
         updatedAt: ingredient.updatedAt.toISOString(),
@@ -162,8 +182,8 @@ export default async function MenusPage(props: MenusPageProps) {
       category: menu.recipe.category as RecipeCategory,
       createdAt: menu.recipe.createdAt.toISOString(),
       updatedAt: menu.recipe.updatedAt.toISOString(),
-      ingredients: [],
-      favorites: [],
+      ingredients: [], // La recette dans le menu n'a pas besoin des ingrédients
+      favorites: [], // La recette dans le menu n'a pas besoin des favoris
       author: menu.recipe.author ? {
         id: menu.recipe.author.id,
         name: menu.recipe.author.name || 'Utilisateur inconnu',
@@ -178,11 +198,13 @@ export default async function MenusPage(props: MenusPageProps) {
     },
     shoppingItems: menu.shoppingItems.map(item => ({
       id: item.id,
-      menuId: item.menuId,
+      menuId: item.menuId || menu.id,
       name: item.name,
       quantity: item.quantity || undefined,
       unit: item.unit as Unit || undefined,
-      type: item.type,
+      type: item.type as IngredientType,
+      checked: item.checked,
+      shoppingListId: item.shoppingListId,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
     })),
@@ -191,7 +213,7 @@ export default async function MenusPage(props: MenusPageProps) {
   }));
 
   return (
-    <div className="mt-4 pb-20">
+    <>
       <MenuCalendar 
         startDate={event.startDate} 
         endDate={event.endDate} 
@@ -206,6 +228,7 @@ export default async function MenusPage(props: MenusPageProps) {
           }
         }))}
       />
-    </div>
+      <ShoppingList menus={formattedMenus} shoppingList={event.shoppingList} />
+      </>
   );
 }

@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 type Params = {
-  params: Promise<{ id: string; eventId: string, menuId: string }>;
-};
+  params: Promise<{ id: string; eventId: string, listId: string }>
+}
 
 interface ShoppingListItem {
   name: string;
@@ -15,12 +15,10 @@ interface ShoppingListItem {
   checked?: boolean;
 }
 
-// Récupérer un menu spécifique
-export async function GET(
-  request: NextRequest,
-  context: Params
-) {
+// Récupérer une liste de courses spécifique
+export async function GET(request: NextRequest, context: Params) {
   const params = await context.params;
+
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -41,37 +39,36 @@ export async function GET(
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const menu = await prisma.menu.findUnique({
+    const shoppingList = await prisma.shoppingList.findUnique({
       where: {
-        id: params.menuId,
+        id: params.listId,
       },
       include: {
-        recipe: true,
-        shoppingItems: true,
+        items: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
 
-    if (!menu) {
-      return Response.json({ error: "Menu non trouvé" }, { status: 404 });
+    if (!shoppingList) {
+      return Response.json({ error: "Liste de courses non trouvée" }, { status: 404 });
     }
 
-    return Response.json(menu);
+    return Response.json(shoppingList);
   } catch (error) {
     console.error("Error:", error);
     return Response.json(
-      { error: "Erreur lors de la récupération du menu" },
+      { error: "Erreur lors de la récupération de la liste de courses" },
       { status: 500 }
     );
   }
 }
 
-// Mettre à jour un menu
-export async function PUT(
-  request: NextRequest,
-  context: Params
-) {
+// Mettre à jour une liste de courses
+export async function PUT(request: NextRequest, context: Params) {
   const params = await context.params;
-
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -94,50 +91,46 @@ export async function PUT(
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const menu = await prisma.menu.update({
+    const shoppingList = await prisma.shoppingList.update({
       where: {
-        id: params.menuId,
+        id: params.listId,
       },
       data: {
-        date: data.date ? new Date(data.date) : undefined,
-        type: data.type,
-        numberOfPeople: data.numberOfPeople,
         name: data.name,
-        recipeId: data.recipeId,
-        url: data.url,
-        shoppingItems: {
+        items: {
           deleteMany: {},
           createMany: {
-            data: data.shoppingItems.map((item: ShoppingListItem) => ({
+            data: data.items.map((item: ShoppingListItem) => ({
               name: item.name,
               quantity: item.quantity || null,
               unit: item.unit || null,
               type: item.type || 'OTHER',
+              checked: item.checked || false,
             })),
           },
         },
       },
       include: {
-        recipe: true,
-        shoppingItems: true,
+        items: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
 
-    return Response.json(menu);
+    return Response.json(shoppingList);
   } catch (error) {
     console.error("Error:", error);
     return Response.json(
-      { error: "Erreur lors de la mise à jour du menu" },
+      { error: "Erreur lors de la mise à jour de la liste de courses" },
       { status: 500 }
     );
   }
 }
 
-// Supprimer un menu
-export async function DELETE(
-  request: NextRequest,
-  context: Params
-) {
+// Supprimer une liste de courses
+export async function DELETE(request: NextRequest, context: Params) {
   const params = await context.params;
 
   try {
@@ -160,9 +153,9 @@ export async function DELETE(
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    await prisma.menu.delete({
+    await prisma.shoppingList.delete({
       where: {
-        id: params.menuId,
+        id: params.listId,
       },
     });
 
@@ -170,7 +163,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error:", error);
     return Response.json(
-      { error: "Erreur lors de la suppression du menu" },
+      { error: "Erreur lors de la suppression de la liste de courses" },
       { status: 500 }
     );
   }

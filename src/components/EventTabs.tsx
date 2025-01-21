@@ -12,7 +12,7 @@ interface Event {
   hasLocation: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
-  hasShopping: boolean;
+  hasTodoList: boolean;
   hasActivities: boolean;
   hasPhotos: boolean;
   hasAccounts: boolean;
@@ -58,15 +58,15 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
             href={`${basePath}/menus`}
             className={tabStyle(pathname.includes("/menus"))}
           >
-            Menus
+            Menus & Liste de courses
           </Link>
         )}
-        {event.hasShopping && (
+        {event.hasTodoList && (
           <Link
-            href={`${basePath}/shopping`}
-            className={tabStyle(pathname.includes("/shopping"))}
+            href={`${basePath}/todo`}
+            className={tabStyle(pathname.includes("/todo"))}
           >
-            Liste de courses
+            Todo liste
           </Link>
         )}
         {event.hasActivities && (

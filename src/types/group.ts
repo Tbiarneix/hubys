@@ -109,6 +109,7 @@ export interface ShoppingItem {
   quantity?: number;
   unit?: Unit;
   type: IngredientType;
+  checked: boolean;
   createdAt: string;
   updatedAt: string;
 }

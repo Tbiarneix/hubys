@@ -7,7 +7,7 @@ type Params = {
   params: Promise<{ id: string; eventId: string }>;
 };
 
-// Récupérer tous les menus d'un événement
+// Récupérer les menus
 export async function GET(request: NextRequest, context: Params) {
   const params = await context.params;
   try {
@@ -30,10 +30,30 @@ export async function GET(request: NextRequest, context: Params) {
       return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const date = searchParams.get('date');
+    const type = searchParams.get('type');
+
+    // Construire la requête avec les filtres optionnels
+    const where: {
+      eventId: string;
+      date?: Date;
+      type?: string;
+    } = {
+      eventId: params.eventId,
+    };
+
+    if (date) {
+      where.date = new Date(date);
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    // Récupérer les menus
     const menus = await prisma.menu.findMany({
-      where: {
-        eventId: params.eventId,
-      },
+      where,
       include: {
         recipe: true,
         shoppingItems: true,

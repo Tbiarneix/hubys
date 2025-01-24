@@ -150,17 +150,17 @@ export default function MenuCalendar({
                       "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
                     )}
                   >
-                    Déjeuner
-                  </div>
+                  Déjeuner
+                </div>
                   <div
                     className={cn(
                       "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
                     )}
                   >
-                    Dîner
-                  </div>
+                  Dîner
                 </div>
               </div>
+            </div>
             </div>
             <div className="overflow-x-auto">
               <div
@@ -176,153 +176,151 @@ export default function MenuCalendar({
                     {format(day, "EEE d", { locale: fr })}
                   </div>
                 ))}
-                {/* Cellules des repas */}
+                {/* Ligne des déjeuners */}
                 {days.map((day, index) => (
-                  <>
-                    {/* Déjeuner */}
-                    <div
-                      key={`${day.toISOString()}-${index}-lunch`}
-                      className={cn(
-                        "h-24 border flex items-center justify-between p-1 text-sm",
-                        getMenu(day, "lunch")
-                          ? "bg-green-100 hover:bg-green-200"
-                          : "bg-gray-100",
-                        getNumberOfPeople(day, "lunch") > 0 &&
-                          !getMenu(day, "lunch")
-                          ? "hover:bg-gray-200 cursor-pointer"
-                          : ""
-                      )}
-                      onClick={() => handleCellClick(day, "lunch")}
-                    >
-                      {getMenu(day, "lunch") ? (
-                        <>
-                          <div className="flex flex-col justify-center">
-                            <span className="font-medium text-gray-600">
-                              {getMenu(day, "lunch")?.name}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {getMenu(day, "lunch")?.numberOfPeople} personnes
-                            </span>
-                            <span className="text-xs text-gray-500 mt-2">
-                              {getMenu(day, "lunch")?.user
-                                ? getActiveAdultsNames(
-                                    getMenu(day, "lunch")!.user.id
-                                  )
-                                : "Inconnu"}
-                            </span>
-                          </div>
-                          {(getMenu(day, "lunch")?.recipe ||
-                            getMenu(day, "lunch")?.url) && (
-                            <div className="flex-shrink-0">
-                              {getMenu(day, "lunch")?.recipe ? (
-                                <Link
-                                  href={`/groups/${params.id}/recipes/${
-                                    getMenu(day, "lunch")?.recipe?.id
-                                  }`}
+                  <div
+                    key={`${day.toISOString()}-${index}-lunch`}
+                    className={cn(
+                      "h-24 border flex items-center justify-between p-1 text-sm",
+                      getMenu(day, "lunch")
+                        ? "bg-green-100 hover:bg-green-200"
+                        : "bg-gray-100",
+                      getNumberOfPeople(day, "lunch") > 0 &&
+                        !getMenu(day, "lunch")
+                        ? "hover:bg-gray-200 cursor-pointer"
+                        : ""
+                    )}
+                    onClick={() => handleCellClick(day, "lunch")}
+                  >
+                    {getMenu(day, "lunch") ? (
+                      <>
+                        <div className="flex flex-col justify-center">
+                          <span className="font-medium text-gray-600">
+                            {getMenu(day, "lunch")?.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {getMenu(day, "lunch")?.numberOfPeople} personnes
+                          </span>
+                          <span className="text-xs text-gray-500 mt-2">
+                            {getMenu(day, "lunch")?.user
+                              ? getActiveAdultsNames(
+                                  getMenu(day, "lunch")!.user.id
+                                )
+                              : "Inconnu"}
+                          </span>
+                        </div>
+                        {(getMenu(day, "lunch")?.recipe ||
+                          getMenu(day, "lunch")?.url) && (
+                          <div className="flex-shrink-0">
+                            {getMenu(day, "lunch")?.recipe ? (
+                              <Link
+                                href={`/groups/${params.id}/recipes/${
+                                  getMenu(day, "lunch")?.recipe?.id
+                                }`}
+                                className="text-xs text-gray-600 hover:text-gray-900"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Link>
+                            ) : (
+                              getMenu(day, "lunch")?.url && (
+                                <a
+                                  href={getMenu(day, "lunch")?.url || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="text-xs text-gray-600 hover:text-gray-900"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <ExternalLink className="h-3 w-3" />
-                                </Link>
-                              ) : (
-                                getMenu(day, "lunch")?.url && (
-                                  <a
-                                    href={getMenu(day, "lunch")?.url || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-gray-600 hover:text-gray-900"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          {getNumberOfPeople(day, "lunch") > 0 ? (
-                            <Plus className="w-6 h-6 text-gray-500" />
-                          ) : (
-                            <Ban className="w-4 h-4 text-gray-300" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Dîner */}
-                    <div
-                      key={`${day.toISOString()}-${index}-dinner`}
-                      className={cn(
-                        "h-24 border flex items-center justify-between p-1 text-sm",
-                        getMenu(day, "dinner")
-                          ? "bg-green-100 hover:bg-green-200"
-                          : "bg-gray-100",
-                        getNumberOfPeople(day, "dinner") > 0 &&
-                          !getMenu(day, "dinner")
-                          ? "hover:bg-gray-200 cursor-pointer"
-                          : ""
-                      )}
-                      onClick={() => handleCellClick(day, "dinner")}
-                    >
-                      {getMenu(day, "dinner") ? (
-                        <>
-                          <div className="flex flex-col justify-center">
-                            <span className="font-medium text-gray-600">
-                              {getMenu(day, "dinner")?.name}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {getMenu(day, "dinner")?.numberOfPeople} personnes
-                            </span>
-                            <span className="text-xs text-gray-500 mt-2">
-                              {getMenu(day, "dinner")?.user
-                                ? getActiveAdultsNames(
-                                    getMenu(day, "dinner")!.user.id
-                                  )
-                                : "Inconnu"}
-                            </span>
+                                </a>
+                              )
+                            )}
                           </div>
-                          {(getMenu(day, "dinner")?.recipe ||
-                            getMenu(day, "dinner")?.url) && (
-                            <div className="flex-shrink-0">
-                              {getMenu(day, "dinner")?.recipe ? (
-                                <Link
-                                  href={`/groups/${params.id}/recipes/${
-                                    getMenu(day, "dinner")?.recipe?.id
-                                  }`}
+                        )}
+                      </>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        {getNumberOfPeople(day, "lunch") > 0 ? (
+                          <Plus className="w-6 h-6 text-gray-500" />
+                        ) : (
+                          <Ban className="w-4 h-4 text-gray-300" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {/* Ligne des dîners */}
+                {days.map((day, index) => (
+                  <div
+                    key={`${day.toISOString()}-${index}-dinner`}
+                    className={cn(
+                      "h-24 border flex items-center justify-between p-1 text-sm",
+                      getMenu(day, "dinner")
+                        ? "bg-green-100 hover:bg-green-200"
+                        : "bg-gray-100",
+                      getNumberOfPeople(day, "dinner") > 0 &&
+                        !getMenu(day, "dinner")
+                        ? "hover:bg-gray-200 cursor-pointer"
+                        : ""
+                    )}
+                    onClick={() => handleCellClick(day, "dinner")}
+                  >
+                    {getMenu(day, "dinner") ? (
+                      <>
+                        <div className="flex flex-col justify-center">
+                          <span className="font-medium text-gray-600">
+                            {getMenu(day, "dinner")?.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {getMenu(day, "dinner")?.numberOfPeople} personnes
+                          </span>
+                          <span className="text-xs text-gray-500 mt-2">
+                            {getMenu(day, "dinner")?.user
+                              ? getActiveAdultsNames(
+                                  getMenu(day, "dinner")!.user.id
+                                )
+                              : "Inconnu"}
+                          </span>
+                        </div>
+                        {(getMenu(day, "dinner")?.recipe ||
+                          getMenu(day, "dinner")?.url) && (
+                          <div className="flex-shrink-0">
+                            {getMenu(day, "dinner")?.recipe ? (
+                              <Link
+                                href={`/groups/${params.id}/recipes/${
+                                  getMenu(day, "dinner")?.recipe?.id
+                                }`}
+                                className="text-xs text-gray-600 hover:text-gray-900"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Link>
+                            ) : (
+                              getMenu(day, "dinner")?.url && (
+                                <a
+                                  href={getMenu(day, "dinner")?.url || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="text-xs text-gray-600 hover:text-gray-900"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <ExternalLink className="h-3 w-3" />
-                                </Link>
-                              ) : (
-                                getMenu(day, "dinner")?.url && (
-                                  <a
-                                    href={getMenu(day, "dinner")?.url || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-gray-600 hover:text-gray-900"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          {getNumberOfPeople(day, "dinner") > 0 ? (
-                            <Plus className="w-6 h-6 text-gray-500" />
-                          ) : (
-                            <Ban className="w-4 h-4 text-gray-300" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </>
+                                </a>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        {getNumberOfPeople(day, "dinner") > 0 ? (
+                          <Plus className="w-6 h-6 text-gray-500" />
+                        ) : (
+                          <Ban className="w-4 h-4 text-gray-300" />
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

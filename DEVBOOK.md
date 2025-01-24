@@ -1,4 +1,4 @@
-# DEVBOOK - Hubilys
+# DEVBOOK - Hubys
 
 ## Configuration initiale
 - [x] Initialiser un projet Next.js (latest)

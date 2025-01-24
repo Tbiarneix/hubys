@@ -31,9 +31,11 @@ interface ShoppingItem {
   quantity?: number;
   unit?: Unit;
   type: IngredientType;
+  shoppingListId?: string
 }
 
 interface AddMealModalProps {
+  shoppingListId?: string;
   isOpen: boolean;
   onClose: () => void;
   date: Date;
@@ -43,7 +45,8 @@ interface AddMealModalProps {
   onAdd?: () => void;
 }
 
-export function AddMealModal({ 
+export function AddMealModal({
+  shoppingListId, 
   isOpen, 
   onClose, 
   date, 
@@ -95,7 +98,7 @@ export function AddMealModal({
           name: newItemName.trim(),
           quantity: newItemQuantity ? parseFloat(newItemQuantity) : undefined,
           unit: newItemUnit,
-          type: newItemType
+          type: newItemType,
         }
       ]);
       setNewItemName('');
@@ -161,8 +164,9 @@ export function AddMealModal({
             name: item.name,
             quantity: item.quantity,
             unit: item.unit,
-            type: item.type
-          }))
+            type: item.type,
+            shoppingListId: shoppingListId,
+          })),
         }),
       });
 

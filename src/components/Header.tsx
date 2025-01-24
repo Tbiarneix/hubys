@@ -57,7 +57,7 @@ export default function Header() {
             <div className="p-4">
               <div className="flex items-center justify-between mb-8">
                 <Link href="/profile" className="text-2xl font-bold text-black">
-                  Hubilys
+                  Hubys
                 </Link>
                 <button
                   onClick={() => setIsSidebarOpen(false)}

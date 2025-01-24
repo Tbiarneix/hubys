@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { luciole } from "@/font/custom-font";
 import "./globals.css";
 import { Providers } from "./providers";
 import Header from "@/components/Header";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Hubilys",
-  description: "Hubilys - Gestionnaire d'événement convivial",
+  title: "Hubys",
+  description: "Simplifiez votre vie quotidienne et vos moments partagés",
 };
 
 export default function RootLayout({
@@ -27,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
+        className={`${luciole.className} antialiased`}
         suppressHydrationWarning
       >
         <Providers>

@@ -154,9 +154,15 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         subgroups: {
           create: uniqueSubgroups,
         },
+        shoppingList: {
+          create: {
+            name: 'Liste de courses',
+          },
+        },
       },
       include: {
         subgroups: true,
+        shoppingList: true,
       },
     });
 

@@ -102,9 +102,16 @@ export type MealType = 'lunch' | 'dinner';
 
 export type IngredientType = 'VEGETABLE' | 'FRUIT' | 'MEAT' | 'FISH' | 'DAIRY' | 'GROCERY' | 'BAKERY' | 'BEVERAGE' | 'CONDIMENT' | 'OTHER';
 
+export interface ShoppingList {
+  id: string;
+  items: ShoppingItem[];
+  createdAt: string;
+  updatedAt: string;
+}
 export interface ShoppingItem {
   id: string;
   menuId: string;
+  shoppingListId?: string;
   name: string;
   quantity?: number;
   unit?: Unit;

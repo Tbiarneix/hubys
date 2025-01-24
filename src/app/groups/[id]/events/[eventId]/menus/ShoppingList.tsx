@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Menu, IngredientType, ShoppingItem } from '@/types/group';
@@ -14,9 +14,7 @@ type FilterType = 'menu' | 'date' | 'category';
 
 interface ShoppingListProps {
   menus: Menu[];
-  shoppingList?: {
-    items: ShoppingItem[];
-  };
+  shoppingListId: string;
 }
 
 interface ExtendedShoppingItem extends ShoppingItem {
@@ -26,10 +24,9 @@ interface ExtendedShoppingItem extends ShoppingItem {
   checked: boolean;
 }
 
-export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
+export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
   const params = useParams();
   const [filterType, setFilterType] = useState<FilterType>('category');
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     name: "",
@@ -38,23 +35,48 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
     type: "OTHER",
     menuId: "",
   });
+  const [allShoppingItems, setAllShoppingItems] = useState<ExtendedShoppingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Récupérer tous les shopping items de tous les menus et de la liste de courses
-  const allShoppingItems: ExtendedShoppingItem[] = [
-    ...menus.flatMap(menu => 
-      menu.shoppingItems.map(item => ({
-        ...item,
-        menuName: menu.name,
-        menuDate: new Date(menu.date),
-        menuType: menu.type,
-        checked: checkedItems[item.id] ?? item.checked
-      }))
-    ),
-    ...(shoppingList?.items ?? []).map(item => ({
-      ...item,
-      checked: checkedItems[item.id] ?? item.checked
-    }))
-  ];
+  // Charger les items de la shopping list
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setIsLoading(true);
+        if (!shoppingListId) {
+          setAllShoppingItems([]);
+          return;
+        }
+
+        const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items`);
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des items');
+        }
+
+        const items = await response.json();
+        setAllShoppingItems(items.map((item: ShoppingItem) => ({
+          ...item,
+          menuName: menus.find((menu) => menu.id === item.menuId)?.name,
+          menuDate: item.menuId
+            ? menus.find((menu) => menu.id === item.menuId)?.date
+              ? new Date(menus.find((menu) => menu.id === item.menuId)!.date)
+              : undefined
+            : undefined,
+          menuType: item.menuId
+            ? menus.find((menu) => menu.id === item.menuId)?.type
+            : undefined,
+          checked: item.checked
+        })));
+      } catch (error) {
+        console.error(error);
+        toast.error("Impossible de récupérer les items");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [shoppingListId, params.id, params.eventId, menus]);
 
   // Fonction pour grouper les items selon le filtre sélectionné
   const groupItems = () => {
@@ -103,72 +125,111 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
     }
   };
 
-  // Fonction pour cocher/décocher un item
-  const handleToggleItem = async (item: ExtendedShoppingItem) => {
-    try {
-      // Mise à jour optimiste de l'état
-      setCheckedItems(prev => ({ ...prev, [item.id]: !item.checked }));
-
-      const response = await fetch(
-        `/api/groups/${params.id}/events/${params.eventId}/shopping-items/${item.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            checked: !item.checked
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        // En cas d'erreur, on revient à l'état précédent
-        setCheckedItems(prev => ({ ...prev, [item.id]: item.checked }));
-        throw new Error("Erreur lors de la mise à jour de l'item");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Impossible de mettre à jour l'item");
-    }
-  };
-
   // Fonction pour ajouter un nouvel item
   const handleAddItem = async () => {
     try {
-      const response = await fetch(
-        `/api/groups/${params.id}/events/${params.eventId}/shopping-items`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...newItem,
-            quantity: newItem.quantity ? parseFloat(newItem.quantity) : null,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de l'ajout de l'item");
+      // Vérifier que le nom est renseigné
+      if (!newItem.name) {
+        toast.error("Le nom est obligatoire");
+        return;
       }
 
-      // Réinitialiser le formulaire et fermer la modal
+      if (!shoppingListId) {
+        toast.error("Aucune liste de courses n'est disponible");
+        return;
+      }
+
+      // Appel à l'API pour créer l'item
+      const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newItem.name,
+          quantity: newItem.quantity || null,
+          unit: newItem.unit || null,
+          type: newItem.type || 'OTHER',
+          menuId: newItem.menuId || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la création de l\'item');
+      }
+
+      const createdItem = await response.json();
+
+      // Mettre à jour l'état local avec le nouvel item
+      setAllShoppingItems(prevItems => [
+        ...prevItems,
+        {
+          ...createdItem,
+          checked: false,
+          menuName: menus.find((menu) => menu.id === createdItem.menuId)?.name,
+          menuDate: createdItem.menuId
+            ? menus.find((menu) => menu.id === createdItem.menuId)?.date
+              ? new Date(menus.find((menu) => menu.id === createdItem.menuId)!.date)
+              : undefined
+            : undefined,
+          menuType: createdItem.menuId
+            ? menus.find((menu) => menu.id === createdItem.menuId)?.type
+            : undefined,
+        },
+      ]);
+
+      // Réinitialiser le formulaire et fermer le modal
       setNewItem({
-        name: "",
-        quantity: "",
-        unit: "",
-        type: "OTHER",
-        menuId: "",
+        name: '',
+        quantity: '',
+        unit: '',
+        type: 'OTHER',
+        menuId: '',
       });
       setIsAddModalOpen(false);
-      toast.success("Item ajouté avec succès");
-      // Recharger la page pour voir le nouvel item
-      window.location.reload();
+
+      toast.success('Item ajouté avec succès');
     } catch (error) {
       console.error(error);
       toast.error("Impossible d'ajouter l'item");
+    }
+  };
+
+  // Fonction pour gérer le changement d'état d'un item
+  const handleToggleItem = async (itemId: string) => {
+    try {
+      if (!shoppingListId) {
+        toast.error("Aucune liste de courses n'est disponible");
+        return;
+      }
+
+      const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items/${itemId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checked: !allShoppingItems.find(item => item.id === itemId)?.checked
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour de l\'item');
+      }
+
+      const updatedItem = await response.json();
+
+      // Mettre à jour l'état local
+      setAllShoppingItems(prevItems => 
+        prevItems.map(item => 
+          item.id === itemId 
+            ? { ...item, checked: updatedItem.checked }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de mettre à jour l'item");
     }
   };
 
@@ -191,7 +252,7 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
   };
 
   return (
-    <div className="space-y-4 bg-gray-50 rounded-lg shadow-sm border p-6 mt-8">
+    <div className="space-y-4 bg-gray-50 rounded-lg shadow-sm border p-6 mt-8 mb-12">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">
           Liste de courses
@@ -398,53 +459,57 @@ export function ShoppingList({ menus, shoppingList }: ShoppingListProps) {
         </Dialog>
       </Transition>
 
-      <div className="space-y-6">
-        {Object.entries(groupedItems).map(([groupName, items]) => (
-          <div key={groupName} className="space-y-2">
-            <h3 className="font-medium text-gray-900">{groupName}</h3>
-            <div className="bg-white rounded-md border border-gray-200">
-              <ul className="divide-y divide-gray-200">
-                {items.map((item, index) => (
-                  <li key={`${item.id}-${index}`} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <button
-                        onClick={() => handleToggleItem(item)}
-                        className={cn(
-                          "flex items-center justify-center w-5 h-5 border rounded",
-                          item.checked 
-                            ? "bg-green-500 border-green-500 text-white" 
-                            : "border-gray-300 hover:border-gray-400"
-                        )}
-                      >
-                        {item.checked && <Check className="w-4 h-4" />}
-                      </button>
-                      <div>
-                        <p className={cn(
-                          "text-gray-900",
+      {isLoading ? (
+        <div className="text-gray-500 text-center">Chargement...</div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(groupedItems).map(([groupName, items]) => (
+            <div key={groupName} className="space-y-2">
+              <h3 className="font-medium text-gray-900">{groupName}</h3>
+              <div className="bg-white rounded-md border border-gray-200">
+                <ul className="divide-y divide-gray-200">
+                  {items.map((item, index) => (
+                    <li key={`${item.id}-${index}`} className="p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <button
+                          onClick={() => handleToggleItem(item.id)}
+                          className={cn(
+                            "flex items-center justify-center w-5 h-5 border rounded",
+                            item.checked 
+                              ? "bg-green-500 border-green-500 text-white" 
+                              : "border-gray-300 hover:border-gray-400"
+                          )}
+                        >
+                          {item.checked && <Check className="w-4 h-4" />}
+                        </button>
+                        <div>
+                          <p className={cn(
+                            "text-gray-900",
+                            item.checked && "line-through text-gray-500"
+                          )}>{item.name}</p>
+                          {filterType !== 'menu' && item.menuName && (
+                            <p className="text-sm text-gray-500">
+                              {item.menuName} ({item.menuDate ? format(item.menuDate, "EEE d", { locale: fr }) : 'Sans date'} - {item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {item.quantity && (
+                        <div className={cn(
+                          "text-gray-700",
                           item.checked && "line-through text-gray-500"
-                        )}>{item.name}</p>
-                        {filterType !== 'menu' && item.menuName && (
-                          <p className="text-sm text-gray-500">
-                            {item.menuName} ({item.menuDate ? format(item.menuDate, "EEE d", { locale: fr }) : 'Sans date'} - {item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {item.quantity && (
-                      <div className={cn(
-                        "text-gray-700",
-                        item.checked && "line-through text-gray-500"
-                      )}>
-                        {item.quantity} {formatUnit(item.unit)}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                        )}>
+                          {item.quantity} {formatUnit(item.unit)}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

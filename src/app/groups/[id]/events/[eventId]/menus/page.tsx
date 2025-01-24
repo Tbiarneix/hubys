@@ -3,8 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import MenuCalendar from "./MenuCalendar";
-import { Recipe, RecipeCategory, Menu, MealType, Unit, IngredientType } from "@/types/group";
-import { ShoppingList } from "./ShoppingList";
+import {
+  Recipe,
+  RecipeCategory,
+  Menu,
+  MealType,
+  Unit,
+  IngredientType,
+} from "@/types/group";
 
 interface MenusPageProps {
   params: Promise<{
@@ -93,7 +99,7 @@ export default async function MenusPage(props: MenusPageProps) {
               shoppingListId: true,
               createdAt: true,
               updatedAt: true,
-            }
+            },
           },
           user: {
             select: {
@@ -105,9 +111,9 @@ export default async function MenusPage(props: MenusPageProps) {
       },
       shoppingList: {
         include: {
-          items: true
-        }
-      }
+          items: true,
+        },
+      },
     },
   });
 
@@ -119,11 +125,15 @@ export default async function MenusPage(props: MenusPageProps) {
     redirect(`/groups/${params.id}/events/${params.eventId}`);
   }
 
+  if (!event.shoppingList) {
+    redirect(`/groups/${params.id}/events/${params.eventId}`);
+  }
+
   // Convertir les dates et formater les recettes selon notre type Recipe
-  const formattedRecipes: Recipe[] = event.group.recipes.map(recipe => {
+  const formattedRecipes: Recipe[] = event.group.recipes.map((recipe) => {
     // S'assurer que l'auteur a un nom valide
-    const authorName = recipe.author?.name || 'Utilisateur inconnu';
-    
+    const authorName = recipe.author?.name || "Utilisateur inconnu";
+
     return {
       id: recipe.id,
       name: recipe.name,
@@ -136,7 +146,7 @@ export default async function MenusPage(props: MenusPageProps) {
       category: recipe.category as RecipeCategory,
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
-      ingredients: recipe.ingredients.map(ingredient => ({
+      ingredients: recipe.ingredients.map((ingredient) => ({
         id: ingredient.id,
         name: ingredient.name,
         quantity: ingredient.quantity,
@@ -146,7 +156,7 @@ export default async function MenusPage(props: MenusPageProps) {
         createdAt: ingredient.createdAt.toISOString(),
         updatedAt: ingredient.updatedAt.toISOString(),
       })),
-      favorites: recipe.favorites.map(favorite => ({
+      favorites: recipe.favorites.map((favorite) => ({
         id: favorite.id,
         userId: favorite.userId,
         recipeId: favorite.recipeId,
@@ -160,7 +170,7 @@ export default async function MenusPage(props: MenusPageProps) {
   });
 
   // Convertir les menus au bon format
-  const formattedMenus: Menu[] = event.menus.map(menu => ({
+  const formattedMenus: Menu[] = event.menus.map((menu) => ({
     id: menu.id,
     eventId: menu.eventId,
     date: menu.date.toISOString(),
@@ -170,65 +180,69 @@ export default async function MenusPage(props: MenusPageProps) {
     recipeId: menu.recipeId || undefined,
     url: menu.url || undefined,
     userId: menu.userId,
-    recipe: menu.recipe ? {
-      id: menu.recipe.id,
-      name: menu.recipe.name,
-      url: menu.recipe.url,
-      description: menu.recipe.description,
-      servings: menu.recipe.servings,
-      steps: menu.recipe.steps,
-      groupId: menu.recipe.groupId,
-      authorId: menu.recipe.authorId,
-      category: menu.recipe.category as RecipeCategory,
-      createdAt: menu.recipe.createdAt.toISOString(),
-      updatedAt: menu.recipe.updatedAt.toISOString(),
-      ingredients: [], // La recette dans le menu n'a pas besoin des ingrédients
-      favorites: [], // La recette dans le menu n'a pas besoin des favoris
-      author: menu.recipe.author ? {
-        id: menu.recipe.author.id,
-        name: menu.recipe.author.name || 'Utilisateur inconnu',
-      } : {
-        id: menu.recipe.authorId,
-        name: 'Utilisateur inconnu',
-      },
-    } : undefined,
+    recipe: menu.recipe
+      ? {
+          id: menu.recipe.id,
+          name: menu.recipe.name,
+          url: menu.recipe.url,
+          description: menu.recipe.description,
+          servings: menu.recipe.servings,
+          steps: menu.recipe.steps,
+          groupId: menu.recipe.groupId,
+          authorId: menu.recipe.authorId,
+          category: menu.recipe.category as RecipeCategory,
+          createdAt: menu.recipe.createdAt.toISOString(),
+          updatedAt: menu.recipe.updatedAt.toISOString(),
+          ingredients: [], // La recette dans le menu n'a pas besoin des ingrédients
+          favorites: [], // La recette dans le menu n'a pas besoin des favoris
+          author: menu.recipe.author
+            ? {
+                id: menu.recipe.author.id,
+                name: menu.recipe.author.name || "Utilisateur inconnu",
+              }
+            : {
+                id: menu.recipe.authorId,
+                name: "Utilisateur inconnu",
+              },
+        }
+      : undefined,
     user: {
       id: menu.user.id,
-      name: menu.user.name || 'Utilisateur inconnu',
+      name: menu.user.name || "Utilisateur inconnu",
     },
-    shoppingItems: menu.shoppingItems.map(item => ({
+    shoppingItems: menu.shoppingItems.map((item) => ({
       id: item.id,
       menuId: item.menuId || menu.id,
       name: item.name,
       quantity: item.quantity || undefined,
-      unit: item.unit as Unit || undefined,
+      unit: (item.unit as Unit) || undefined,
       type: item.type as IngredientType,
       checked: item.checked,
-      shoppingListId: item.shoppingListId,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
     })),
+    shoppingListId: event.shoppingList?.id,
     createdAt: menu.createdAt.toISOString(),
     updatedAt: menu.updatedAt.toISOString(),
   }));
 
+  const shoppingListId = event.shoppingList.id;
+
   return (
-    <>
-      <MenuCalendar 
-        startDate={event.startDate} 
-        endDate={event.endDate} 
-        recipes={formattedRecipes}
-        menus={formattedMenus}
-        subgroups={event.subgroups}
-        presences={event.presences}
-        groupMembers={event.group.members.map(member => ({
-          user: {
-            id: member.user.id,
-            name: member.user.name || 'Inconnu'
-          }
-        }))}
-      />
-      <ShoppingList menus={formattedMenus} shoppingList={event.shoppingList} />
-      </>
+    <MenuCalendar
+      startDate={event.startDate}
+      endDate={event.endDate}
+      recipes={formattedRecipes}
+      menus={formattedMenus}
+      subgroups={event.subgroups}
+      presences={event.presences}
+      groupMembers={event.group.members.map((member) => ({
+        user: {
+          id: member.user.id,
+          name: member.user.name || "Inconnu",
+        },
+      }))}
+      shoppingListId={shoppingListId}
+    />
   );
 }

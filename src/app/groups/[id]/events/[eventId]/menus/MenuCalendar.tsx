@@ -11,6 +11,7 @@ import { Plus, ExternalLink, Ban } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SubgroupPresence } from "@prisma/client";
+import { ShoppingList } from "./ShoppingList";
 
 interface MenuCalendarProps {
   startDate: Date;
@@ -25,6 +26,7 @@ interface MenuCalendarProps {
       name: string;
     };
   }[];
+  shoppingListId: string;
 }
 
 export default function MenuCalendar({
@@ -35,6 +37,7 @@ export default function MenuCalendar({
   subgroups,
   presences,
   groupMembers,
+  shoppingListId,
 }: MenuCalendarProps) {
   const params = useParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -326,9 +329,14 @@ export default function MenuCalendar({
           </div>
         </div>
       </div>
+      <ShoppingList
+        menus={menus}
+        shoppingListId={shoppingListId}
+      />
 
       {selectedDate && selectedMealType && (
         <AddMealModal
+          shoppingListId={shoppingListId}
           isOpen={isAddMealModalOpen}
           onClose={handleAddModalClose}
           date={selectedDate}

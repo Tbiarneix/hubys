@@ -168,20 +168,20 @@ export default function MenuCalendar({
                 style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}
               >
                 {/* En-tête avec les dates */}
-                {days.map((day) => (
+                {days.map((day, index) => (
                   <div
-                    key={day.toISOString()}
+                    key={`${day.toISOString()}-${index}`}
                     className="h-12 px-2 flex items-center justify-center border-b text-sm font-medium text-gray-700"
                   >
                     {format(day, "EEE d", { locale: fr })}
                   </div>
                 ))}
                 {/* Cellules des repas */}
-                {days.map((day) => (
+                {days.map((day, index) => (
                   <>
                     {/* Déjeuner */}
                     <div
-                      key={`${day.toISOString()}-lunch`}
+                      key={`${day.toISOString()}-${index}-lunch`}
                       className={cn(
                         "h-24 border flex items-center justify-between p-1 text-sm",
                         getMenu(day, "lunch")
@@ -253,7 +253,7 @@ export default function MenuCalendar({
 
                     {/* Dîner */}
                     <div
-                      key={`${day.toISOString()}-dinner`}
+                      key={`${day.toISOString()}-${index}-dinner`}
                       className={cn(
                         "h-24 border flex items-center justify-between p-1 text-sm",
                         getMenu(day, "dinner")

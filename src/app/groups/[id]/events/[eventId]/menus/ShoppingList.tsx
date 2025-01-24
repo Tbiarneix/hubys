@@ -134,11 +134,6 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
         return;
       }
 
-      if (!shoppingListId) {
-        toast.error("Aucune liste de courses n'est disponible");
-        return;
-      }
-
       // Appel à l'API pour créer l'item
       const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items`, {
         method: 'POST',
@@ -147,7 +142,7 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
         },
         body: JSON.stringify({
           name: newItem.name,
-          quantity: newItem.quantity || null,
+          quantity: newItem.quantity ? parseFloat(newItem.quantity) : null,
           unit: newItem.unit || null,
           type: newItem.type || 'OTHER',
           menuId: newItem.menuId || null,
@@ -482,15 +477,15 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
                         >
                           {item.checked && <Check className="w-4 h-4" />}
                         </button>
-                        <div>
+                        <div className="flex gap-3 items-center">
                           <p className={cn(
                             "text-gray-900",
                             item.checked && "line-through text-gray-500"
                           )}>{item.name}</p>
                           {filterType !== 'menu' && item.menuName && (
-                            <p className="text-sm text-gray-500">
+                            <span className="text-sm text-gray-500">
                               {item.menuName} ({item.menuDate ? format(item.menuDate, "EEE d", { locale: fr }) : 'Sans date'} - {item.menuType === 'lunch' ? 'Déjeuner' : 'Dîner'})
-                            </p>
+                            </span>
                           )}
                         </div>
                       </div>

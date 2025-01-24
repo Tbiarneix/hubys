@@ -213,12 +213,12 @@ export function PresenceCalendar({
         <div>
           {/* Labels de gauche pour les sous-groupes */}
           <div className="h-12" /> {/* Espace pour l'en-tête des dates */}
-          {subgroups.map((subgroup) => (
-            <div key={subgroup.id} className="flex justify-between">
+          {subgroups.map((subgroup, index) => (
+            <div key={`${subgroup.id}-${index}`} className="flex justify-between">
               <div className="h-16 px-2 w-full flex flex-col justify-center text-sm font-medium text-gray-700 border relative">
                 <p>
                   {subgroup.activeAdults.map((userId, index) => (
-                    <span key={userId}>
+                    <span key={`${userId}-${index}`}>
                       {index > 0 && <span key={`sep-${userId}`}> & </span>}
                       <span key={userId}>{userMap.get(userId)?.name || 'Sans nom'}</span>
                     </span>
@@ -230,7 +230,7 @@ export function PresenceCalendar({
                       .flatMap(u => u.children)
                       .find(c => c.id === childId);
                     return (
-                      <span key={childId}>
+                      <span key={`${childId}-${index}`}>
                         {index > 0 && <span key={`sep-${childId}`}>, </span>}
                         <span key={childId} className="text-sm text-gray-700">{child?.firstName}</span>
                       </span>
@@ -278,8 +278,8 @@ export function PresenceCalendar({
               </div>
             ))}
             {/* Grille des présences */}
-            {subgroups.map((subgroup) => (
-              <React.Fragment key={`${subgroup.id}`}>
+            {subgroups.map((subgroup, index) => (
+              <React.Fragment key={`${subgroup.id}-${index}`}>
                 {days.map((day) => {
                   const isEditing = editingSubgroupId === subgroup.id;
                   const canEdit = subgroup.activeAdults.includes(currentUserId) || 
@@ -288,7 +288,7 @@ export function PresenceCalendar({
                   return (
                     <>
                       <div
-                        key={`${day.toISOString()}-lunch`}
+                        key={`${day.toISOString()}-${index}-lunch`}
                         className={cn(
                           "h-8 border flex items-center justify-center relative",
                           isEditing 
@@ -344,7 +344,7 @@ export function PresenceCalendar({
                         )}
                       </div>
                       <div
-                        key={`${day.toISOString()}-dinner`}
+                        key={`${day.toISOString()}-${index}-dinner`}
                         className={cn(
                           "h-8 border flex items-center justify-center relative",
                           isEditing 

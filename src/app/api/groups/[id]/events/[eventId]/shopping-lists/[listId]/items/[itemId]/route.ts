@@ -36,10 +36,12 @@ export async function PUT(request: NextRequest, context: Params) {
         id: params.itemId,
       },
       data: {
+        name: data.name,
         checked: data.checked,
         quantity: data.quantity || null,
         unit: data.unit || null,
         type: data.type || 'OTHER',
+        menuId: data.menuId || null,
       },
     });
 

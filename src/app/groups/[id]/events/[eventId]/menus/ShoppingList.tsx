@@ -1,11 +1,12 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { Fragment, useState, useEffect } from 'react';
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Menu, IngredientType, ShoppingItem } from '@/types/group';
+import { Menu, IngredientType, ShoppingItem, Unit } from '@/types/group';
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Pencil, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, Transition } from "@headlessui/react";
@@ -28,6 +29,8 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
   const params = useParams();
   const [filterType, setFilterType] = useState<FilterType>('category');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ExtendedShoppingItem | null>(null);
   const [newItem, setNewItem] = useState({
     name: "",
     quantity: "",
@@ -222,6 +225,87 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
             : item
         )
       );
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de mettre à jour l'item");
+    }
+  };
+
+  const handleDelete = async (itemId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet item ?")) return;
+    
+    try {
+      const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression de l\'item');
+      }
+
+      // Mettre à jour l'état local
+      setAllShoppingItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      toast.success("Item supprimé avec succès");
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de supprimer l'item");
+    }
+  };
+
+  const handleEdit = (item: ExtendedShoppingItem) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+
+    try {
+      const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items/${editingItem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingItem.name,
+          quantity: editingItem.quantity,
+          unit: editingItem.unit,
+          type: editingItem.type,
+          menuId: editingItem.menuId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour de l\'item');
+      }
+
+      const updatedItem = await response.json();
+
+      // Mettre à jour l'état local avec les informations du menu
+      setAllShoppingItems(prevItems =>
+        prevItems.map(item =>
+          item.id === editingItem.id
+            ? {
+                ...item,
+                ...updatedItem,
+                menuName: menus.find((menu) => menu.id === updatedItem.menuId)?.name,
+                menuDate: updatedItem.menuId
+                  ? menus.find((menu) => menu.id === updatedItem.menuId)?.date
+                    ? new Date(menus.find((menu) => menu.id === updatedItem.menuId)!.date)
+                    : undefined
+                  : undefined,
+                menuType: updatedItem.menuId
+                  ? menus.find((menu) => menu.id === updatedItem.menuId)?.type
+                  : undefined,
+              }
+            : item
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      toast.success("Item mis à jour avec succès");
     } catch (error) {
       console.error(error);
       toast.error("Impossible de mettre à jour l'item");
@@ -454,12 +538,155 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
         </Dialog>
       </Transition>
 
+      {/* Modal d'édition */}
+      <Transition appear show={isEditModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={() => setIsEditModalOpen(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  >
+                    Modifier l'item
+                  </Dialog.Title>
+                  <form onSubmit={handleUpdateItem} className="space-y-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                        Nom
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        value={editingItem?.name || ''}
+                        onChange={(e) => setEditingItem(prev => prev ? { ...prev, name: e.target.value } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                        Quantité
+                      </label>
+                      <input
+                        type="number"
+                        id="quantity"
+                        value={editingItem?.quantity || ''}
+                        onChange={(e) => setEditingItem(prev => prev ? { ...prev, quantity: parseFloat(e.target.value) } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+                        Unité
+                      </label>
+                      <select
+                        id="unit"
+                        value={editingItem?.unit || 'NONE'}
+                        onChange={(e) => setEditingItem(prev => prev ? { ...prev, unit: e.target.value as Unit } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                      >
+                        <option value="">Choisir une unité</option>
+                        <option value="NONE">-</option>
+                        <option value="GRAM">Grammes</option>
+                        <option value="KILOGRAM">Kilogrammes</option>
+                        <option value="MILLILITER">Millilitres</option>
+                        <option value="CENTILITER">Centilitres</option>
+                        <option value="LITER">Litres</option>
+                        <option value="SPOON">Cuillères</option>
+                        <option value="BUNCH">Bouquets</option>
+                        <option value="PACK">Paquets</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                        Type
+                      </label>
+                      <select
+                        id="type"
+                        value={editingItem?.type || 'OTHER'}
+                        onChange={(e) => setEditingItem(prev => prev ? { ...prev, type: e.target.value as IngredientType } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                      >
+                        <option value="VEGETABLE">Légumes</option>
+                        <option value="FRUIT">Fruits</option>
+                        <option value="MEAT">Viande</option>
+                        <option value="FISH">Poisson</option>
+                        <option value="DAIRY">Produits laitiers</option>
+                        <option value="GROCERY">Épicerie</option>
+                        <option value="BAKERY">Boulangerie</option>
+                        <option value="BEVERAGE">Boissons</option>
+                        <option value="CONDIMENT">Condiments</option>
+                        <option value="OTHER">Autre</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="menu" className="block text-sm font-medium text-gray-700 mb-1">
+                        Menu (optionnel)
+                      </label>
+                      <select
+                        id="menu"
+                        value={editingItem?.menuId || ''}
+                        onChange={(e) => setEditingItem(prev => prev ? { ...prev, menuId: e.target.value || null } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                      >
+                        <option value="">Sans menu</option>
+                        {menus.map((menu) => (
+                          <option key={menu.id} value={menu.id}>
+                            {menu.name} ({format(new Date(menu.date), "EEE d", { locale: fr })} - {menu.type === 'lunch' ? 'Déjeuner' : 'Dîner'})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mt-6 flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+                      >
+                        Mettre à jour
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
       {isLoading ? (
         <div className="text-gray-500 text-center">Chargement...</div>
       ) : (
-        <div className="space-y-6">
+        <div>
           {Object.entries(groupedItems).map(([groupName, items]) => (
-            <div key={groupName} className="space-y-2">
+            <div key={groupName} className="space-y-2 mb-4">
               <h3 className="font-medium text-gray-900">{groupName}</h3>
               <div className="bg-white rounded-md border border-gray-200">
                 <ul className="divide-y divide-gray-200">
@@ -489,14 +716,30 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
                           )}
                         </div>
                       </div>
-                      {item.quantity && (
-                        <div className={cn(
-                          "text-gray-700",
-                          item.checked && "line-through text-gray-500"
-                        )}>
-                          {item.quantity} {formatUnit(item.unit)}
+                      <div className="flex items-center space-x-4">
+                        {item.quantity && (
+                          <div className={cn(
+                            "text-gray-700",
+                            item.checked && "line-through text-gray-500"
+                          )}>
+                            {item.quantity} {formatUnit(item.unit)}
+                          </div>
+                        )}
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-1 text-gray-400 hover:text-gray-600"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-1 text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </li>
                   ))}
                 </ul>

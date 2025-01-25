@@ -108,9 +108,10 @@ export interface ShoppingList {
   createdAt: string;
   updatedAt: string;
 }
+
 export interface ShoppingItem {
   id: string;
-  menuId: string;
+  menuId?: string | null;
   shoppingListId?: string;
   name: string;
   quantity?: number;

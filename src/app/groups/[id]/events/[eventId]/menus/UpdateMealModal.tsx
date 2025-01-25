@@ -50,6 +50,7 @@ export function UpdateMealModal({
 }: UpdateMealModalProps) {
   const params = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [mealName, setMealName] = useState('');
   const [mealUrl, setMealUrl] = useState('');
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
@@ -157,6 +158,31 @@ export function UpdateMealModal({
       toast.error("Impossible de modifier le repas");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/groups/${params.id}/events/${params.eventId}/menus/${menu.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression du repas");
+      }
+
+      toast.success("Repas supprimé avec succès");
+      onUpdate?.();
+      onClose();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Impossible de supprimer le repas");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -362,6 +388,13 @@ export function UpdateMealModal({
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Annuler
+              </button>
+              <button
+                type="button"
+                onClick={isDeleting ? () => {} : handleDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-gray-300 rounded-md hover:bg-red-700"
+              >
+                Supprimer le menu
               </button>
               <button
                 type="submit"

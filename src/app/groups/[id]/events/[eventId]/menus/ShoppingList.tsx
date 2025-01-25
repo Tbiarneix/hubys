@@ -232,8 +232,6 @@ export function ShoppingList({ menus, shoppingListId }: ShoppingListProps) {
   };
 
   const handleDelete = async (itemId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet item ?")) return;
-    
     try {
       const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/shopping-lists/${shoppingListId}/items/${itemId}`, {
         method: 'DELETE',

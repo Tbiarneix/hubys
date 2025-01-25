@@ -164,6 +164,20 @@ export interface SubgroupPresence {
   };
 }
 
+export interface TodoItem {
+  id: string;
+  title: string;
+  completed: boolean;
+  assignedToId: string | null;
+  eventId: string;
+  createdAt: string;
+  updatedAt: string;
+  assignedTo?: {
+    id: string;
+    name: string | null;
+  };
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -185,6 +199,7 @@ export interface Event {
   subgroups?: Subgroup[];
   presences?: SubgroupPresence[];
   menus?: Menu[];
+  todoItems?: TodoItem[];
 }
 
 export interface Group {

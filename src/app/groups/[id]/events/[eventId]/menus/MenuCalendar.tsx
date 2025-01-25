@@ -358,6 +358,7 @@ export default function MenuCalendar({
 
       {selectedMenu && (
         <UpdateMealModal
+          shoppingListId={shoppingListId}
           isOpen={isUpdateMealModalOpen}
           onClose={handleUpdateModalClose}
           menu={selectedMenu}

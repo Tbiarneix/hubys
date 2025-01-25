@@ -13,6 +13,7 @@ interface ShoppingListItem {
   unit?: string;
   type?: string;
   checked?: boolean;
+  shoppingListId?: string;
 }
 
 // Récupérer un menu spécifique
@@ -113,6 +114,7 @@ export async function PUT(
               quantity: item.quantity || null,
               unit: item.unit || null,
               type: item.type || 'OTHER',
+              shoppingListId: item.shoppingListId
             })),
           },
         },

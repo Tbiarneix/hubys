@@ -7,6 +7,14 @@ type Params = {
   params: Promise<{ id: string; eventId: string }>;
 };
 
+interface ShoppingItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  type: string;
+  shoppingListId: string;
+}
+
 // Récupérer les menus
 export async function GET(request: NextRequest, context: Params) {
   const params = await context.params;
@@ -112,7 +120,13 @@ export async function POST(request: NextRequest, context: Params) {
         url: data.url,
         userId: session.user.id,
         shoppingItems: {
-          create: data.shoppingItems,
+          create: data.shoppingItems.map((item: ShoppingItem) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            type: item.type,
+            shoppingListId: item.shoppingListId
+          }))
         },
       },
       include: {

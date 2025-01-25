@@ -28,6 +28,7 @@ interface ShoppingItem {
   quantity?: number;
   unit?: Unit;
   type: IngredientType;
+  shoppingListId?: string;
 }
 
 interface UpdateMealModalProps {
@@ -36,6 +37,7 @@ interface UpdateMealModalProps {
   menu: Menu;
   recipes: Recipe[];
   onUpdate?: () => void;
+  shoppingListId?: string;
 }
 
 export function UpdateMealModal({ 
@@ -43,7 +45,8 @@ export function UpdateMealModal({
   onClose, 
   menu,
   recipes,
-  onUpdate 
+  onUpdate,
+  shoppingListId
 }: UpdateMealModalProps) {
   const params = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,6 +88,7 @@ export function UpdateMealModal({
           undefined,
         unit: ingredient.unit || 'NONE',
         type: ingredient.type || 'OTHER',
+        shoppingListId: shoppingListId
       }));
       setShoppingList(adjustedIngredients);
     }
@@ -99,7 +103,8 @@ export function UpdateMealModal({
           name: newItemName.trim(),
           quantity: newItemQuantity ? parseFloat(newItemQuantity) : undefined,
           unit: newItemUnit,
-          type: newItemType
+          type: newItemType,
+          shoppingListId: shoppingListId
         }
       ]);
       setNewItemName('');

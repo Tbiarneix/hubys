@@ -44,8 +44,8 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
         },
         body: JSON.stringify({
           name: name,
-          startDate: new Date(startDate + 'T00:00:00').toISOString(),
-          endDate: new Date(endDate + 'T23:59:59').toISOString(),
+          startDate: new Date(startDate + 'T12:00:00').toISOString(),
+          endDate: new Date(endDate + 'T12:00:00').toISOString(),
           options,
         }),
       });

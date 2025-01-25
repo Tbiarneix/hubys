@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, Plus, Minus, Save, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
-import { Unit } from "@prisma/client";
+import { Unit, IngredientType } from "@prisma/client";
 import { Recipe } from "@/types/group";
 
 interface Ingredient {
@@ -13,6 +13,7 @@ interface Ingredient {
   name: string;
   quantity: number;
   unit: Unit | null;
+  type: IngredientType;
 }
 
 export default function EditRecipePage() {
@@ -28,7 +29,7 @@ export default function EditRecipePage() {
   const [description, setDescription] = useState("");
   const [servings, setServings] = useState(4);
   const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { name: "", quantity: 0, unit: null },
+    { name: "", quantity: 0, unit: null, type: "OTHER" },
   ]);
   const [steps, setSteps] = useState<string[]>([""]);
 
@@ -62,7 +63,7 @@ export default function EditRecipePage() {
   }, [groupId, recipeId, router]);
 
   const addIngredient = () => {
-    setIngredients([...ingredients, { name: "", quantity: 0, unit: null }]);
+    setIngredients([...ingredients, { name: "", quantity: 0, unit: null, type: "OTHER" }]);
   };
 
   const removeIngredient = (index: number) => {
@@ -102,6 +103,11 @@ export default function EditRecipePage() {
       return;
     }
 
+    // Filtrer les ingrédients vides
+    const validIngredients = ingredients.filter(i => i.name.trim() !== "");
+    // Filtrer les étapes vides
+    const validSteps = steps.filter(s => s.trim() !== "");
+
     setIsSubmitting(true);
 
     try {
@@ -117,12 +123,13 @@ export default function EditRecipePage() {
             url: url || null,
             description: description || null,
             servings,
-            ingredients: ingredients.map((i) => ({
+            ingredients: validIngredients.map((i) => ({
               name: i.name.trim(),
               quantity: parseFloat(i.quantity.toString()),
               unit: i.unit,
+              type: i.type,
             })),
-            steps: steps.map((s) => s.trim()),
+            steps: validSteps,
           }),
         }
       );
@@ -261,7 +268,6 @@ export default function EditRecipePage() {
                     }
                     placeholder="Nom de l'ingrédient"
                     className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    required
                   />
                 </div>
                 <div className="w-32">
@@ -278,7 +284,6 @@ export default function EditRecipePage() {
                     min="0"
                     step="any"
                     className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    required
                   />
                 </div>
                 <div className="w-40">
@@ -302,6 +307,26 @@ export default function EditRecipePage() {
                     <option value="SPOON">Cuillère</option>
                     <option value="BUNCH">Botte</option>
                     <option value="PACK">Paquet</option>
+                  </select>
+                </div>
+                <div className="w-40">
+                  <select
+                    value={ingredient.type}
+                    onChange={(e) =>
+                      updateIngredient(index, "type", e.target.value)
+                    }
+                    className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    <option value="VEGETABLE">Légumes</option>
+                    <option value="FRUIT">Fruits</option>
+                    <option value="MEAT">Viande</option>
+                    <option value="FISH">Poisson</option>
+                    <option value="DAIRY">Produits laitiers</option>
+                    <option value="GROCERY">Épicerie</option>
+                    <option value="BAKERY">Boulangerie</option>
+                    <option value="BEVERAGE">Boissons</option>
+                    <option value="CONDIMENT">Condiments</option>
+                    <option value="OTHER">Sans categorie</option>
                   </select>
                 </div>
                 <button
@@ -337,7 +362,6 @@ export default function EditRecipePage() {
                     onChange={(e) => updateStep(index, e.target.value)}
                     rows={2}
                     className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    required
                   />
                 </div>
                 <button

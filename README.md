@@ -63,7 +63,7 @@ L'application sera accessible à :
 ## Structure du projet
 
 ```
-Hubilys/
+Hubys/
 ├── src/
 │   ├── app/              # Routes et composants Next.js
 │   ├── graphql/

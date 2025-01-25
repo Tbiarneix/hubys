@@ -5,13 +5,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --primary: #fff6d9;
+  --secondary: #ffc49d;
+  --tertiary: #d6eddc;
+  --title: rgb(17 24 39 / var(--tw-text-opacity, 1));
+  --text: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 
 body {
@@ -19,3 +17,17 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+h1, h2, h3 {
+  color: var(--title);
+}
+
+p, span, p {
+  color: var(--text);
+}
+
+/* button {
+  background: var(--secondary);
+  color: var(--title);
+  font-weight: bold;
+} */

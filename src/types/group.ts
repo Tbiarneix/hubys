@@ -63,6 +63,7 @@ export interface Ingredient {
   name: string;
   quantity: number;
   unit: Unit | null;
+  type: IngredientType;
   recipeId: string;
   createdAt: string;
   updatedAt: string;
@@ -95,6 +96,95 @@ export interface Recipe {
     id: string;
     name: string;
   };
+}
+
+export type MealType = 'lunch' | 'dinner';
+
+export type IngredientType = 'VEGETABLE' | 'FRUIT' | 'MEAT' | 'FISH' | 'DAIRY' | 'GROCERY' | 'BAKERY' | 'BEVERAGE' | 'CONDIMENT' | 'OTHER';
+
+export interface ShoppingList {
+  id: string;
+  items: ShoppingItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShoppingItem {
+  id: string;
+  menuId?: string | null;
+  shoppingListId?: string;
+  name: string;
+  quantity?: number;
+  unit?: Unit;
+  type: IngredientType;
+  checked: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Menu {
+  id: string;
+  eventId: string;
+  date: string;
+  type: MealType;
+  numberOfPeople: number;
+  name: string;
+  recipeId?: string;
+  url?: string;
+  userId: string;
+  recipe?: Recipe;
+  user: {
+    id: string;
+    name: string;
+  };
+  shoppingItems: ShoppingItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subgroup {
+  id: string;
+  eventId: string;
+  activeAdults: string[];
+  activeChildren: string[];
+}
+
+export interface SubgroupPresence {
+  id: string;
+  subgroupId: string;
+  userId: string;
+  date: string;
+  isPresent: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string | null;
+  };
+}
+
+export interface Event {
+  id: string;
+  name: string;
+  groupId: string;
+  startDate: string;
+  endDate: string;
+  hasLocation: boolean;
+  hasCalendar: boolean;
+  hasMenus: boolean;
+  hasShopping: boolean;
+  hasActivities: boolean;
+  hasPhotos: boolean;
+  hasAccounts: boolean;
+  adultShare: number;
+  childShare: number;
+  createdAt: string;
+  updatedAt: string;
+  locations?: Location[];
+  subgroups?: Subgroup[];
+  presences?: SubgroupPresence[];
+  menus?: Menu[];
 }
 
 export interface Group {

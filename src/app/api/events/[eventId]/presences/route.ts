@@ -7,6 +7,21 @@ type Params = {
   params: Promise<{ eventId: string }>
 }
 
+type RequestBody = {
+  subgroupId: string;
+  date: string;
+  type: 'lunch' | 'dinner';
+  lunchNumber: number;
+  dinnerNumber: number;
+};
+
+type SubgroupPresenceFields = {
+  lunch: boolean;
+  dinner: boolean;
+  lunchNumber: number;
+  dinnerNumber: number;
+};
+
 export async function GET(
   request: Request,
   context: Params
@@ -45,43 +60,75 @@ export async function PUT(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const body = await request.json();
-    const { subgroupId, date, type } = body;
+    const { subgroupId, date, type, lunchNumber, dinnerNumber }: RequestBody = await request.json();
 
-    // Vérifier que l'utilisateur fait partie du sous-groupe
-    const subgroup = await prisma.subgroup.findUnique({
-      where: { id: subgroupId },
+    // Vérifier que l'utilisateur a accès à l'événement
+    const event = await prisma.event.findFirst({
+      where: {
+        id: params.eventId,
+        group: {
+          members: {
+            some: {
+              userId: session.user.id,
+            },
+          },
+        },
+      },
     });
 
-    if (!subgroup) {
-      return new NextResponse("Subgroup not found", { status: 404 });
+    if (!event) {
+      return new NextResponse("Event not found", { status: 404 });
     }
 
-    if (!subgroup.activeAdults.includes(session.user.id) && 
-        !subgroup.activeChildren.includes(session.user.id)) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    // Mettre à jour ou créer la présence
-    const presence = await prisma.subgroupPresence.upsert({
+    // Récupérer la présence existante
+    const existingPresence = await prisma.subgroupPresence.findFirst({
       where: {
-        subgroupId_eventId_date: {
+        subgroupId,
+        eventId: params.eventId,
+        date: new Date(date),
+      },
+    });
+
+    // Cas 1: Mise à jour des nombres (lunchNumber ou dinnerNumber sont définis)
+    if (lunchNumber !== undefined || dinnerNumber !== undefined) {
+      const presence = await prisma.subgroupPresence.upsert({
+        where: {
+          id: existingPresence?.id || '',
+        },
+        create: {
           subgroupId,
           eventId: params.eventId,
           date: new Date(date),
+          lunch: type === 'lunch',
+          dinner: type === 'dinner',
+          lunchNumber: lunchNumber || 0,
+          dinnerNumber: dinnerNumber || 0,
         },
-      },
-      update: {
-        [type]: true,
+        update: {
+          ...(lunchNumber !== undefined && { lunchNumber }),
+          ...(dinnerNumber !== undefined && { dinnerNumber }),
+        },
+      });
+      return NextResponse.json(presence);
+    }
+
+    // Cas 2: Toggle de présence (aucun nombre n'est défini)
+    const presence = await prisma.subgroupPresence.upsert({
+      where: {
+        id: existingPresence?.id || '',
       },
       create: {
         subgroupId,
         eventId: params.eventId,
         date: new Date(date),
         [type]: true,
+        lunchNumber: 0,
+        dinnerNumber: 0,
+      },
+      update: {
+        [type as keyof SubgroupPresenceFields]: !existingPresence?.[type as keyof SubgroupPresenceFields],
       },
     });
-
     return NextResponse.json(presence);
   } catch (error) {
     console.error("[PRESENCES_PUT]", error);

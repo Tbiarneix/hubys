@@ -147,16 +147,22 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         hasLocation: options?.location ?? true,
         hasCalendar: true,
         hasMenus: options?.menus ?? true,
-        hasShopping: options?.shopping ?? true,
+        hasTodoList: options?.todoList ?? true,
         hasActivities: options?.activities ?? true,
         hasPhotos: options?.photos ?? true,
         hasAccounts: options?.accounts ?? true,
         subgroups: {
           create: uniqueSubgroups,
         },
+        shoppingList: {
+          create: {
+            name: 'Liste de courses',
+          },
+        },
       },
       include: {
         subgroups: true,
+        shoppingList: true,
       },
     });
 

@@ -1,7 +1,7 @@
-# Application Hubilys
+# Application Hubys
 
 ## Infos générales
-J'aimerais faire une application de gestion pour ma famille. Le nom de cette application est "Hubilys".
+J'aimerais faire une application de gestion pour ma famille. Le nom de cette application est "Hubys".
 Le choix de technos : next (@lastest) pour le front et le back avec prisma, graphql et postgreSQL pour la base de données. Le css sera géré avec tailwind et shadcn.
 L'application doit être contenérisée avec docker.
 L'application doit utiliser i8n pour pouvoir être traduite en anglais plus tard. Pour l'instant, tout doit être rédigé avec des clés en français.

@@ -31,7 +31,6 @@
 - [x] Gestion des groupes
   - [x] Création/Invitation
   - [x] Interface de groupe
-- [ ] Gestion des événements indépendants
 
 ## Fonctionnalités de Groupe
 - [x] Système d'invitation (email + lien temporaire)
@@ -53,12 +52,12 @@
 - [x] Calendrier des présences
   - [x] Vue midi/soir
   - [x] Gestion famille
-- [ ] Système de menus
-  - [ ] CRUD des repas
-  - [ ] Liaison avec la liste de courses
-- [ ] Liste de courses
-  - [ ] Système de tags
-  - [ ] Gestion des quantités
+- [x] Système de menus
+  - [x] CRUD des repas
+  - [x] Liaison avec la liste de courses
+- [x] Liste de courses
+  - [x] Système de tags
+  - [x] Gestion des quantités
 - [ ] Calendrier des activités
   - [ ] Vue carte/calendrier
   - [ ] CRUD des activités

@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import ClientActivities from "./ClientActivities";
 
 interface ActivitiesPageProps {
   params: Promise<{
@@ -23,9 +24,7 @@ export default async function ActivitiesPage(props: ActivitiesPageProps) {
 
   return (
     <div className="mt-4 pb-20">
-      <div>
-        <p className="text-gray-700">Gestion des activités</p>
-      </div>
+      <ClientActivities startDate={event.startDate} endDate={event.endDate} />
     </div>
   );
 }

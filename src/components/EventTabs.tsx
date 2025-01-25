@@ -66,7 +66,7 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
             href={`${basePath}/todo`}
             className={tabStyle(pathname.includes("/todo"))}
           >
-            Todo liste
+            A faire
           </Link>
         )}
         {event.hasActivities && (

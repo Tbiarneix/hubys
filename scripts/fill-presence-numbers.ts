@@ -10,8 +10,6 @@ async function main() {
     }
   });
 
-  console.log(`Found ${presences.length} presences to update`);
-
   // Pour chaque présence
   for (const presence of presences) {
     const totalActive = presence.subgroup.activeAdults.length + presence.subgroup.activeChildren.length;
@@ -27,8 +25,6 @@ async function main() {
       }
     });
   }
-
-  console.log('All presences have been updated');
 }
 
 main()

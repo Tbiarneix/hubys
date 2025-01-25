@@ -33,8 +33,6 @@ export async function PUT(request: NextRequest, context: Params) {
     const data = await request.json();
     const { date, type, totalPeople } = data;
 
-    console.log('Updating menu quantities:', { date, type, totalPeople, eventId: params.eventId });
-
     // Récupérer le menu pour cette date et ce type
     const menu = await prisma.menu.findFirst({
       where: {
@@ -47,16 +45,12 @@ export async function PUT(request: NextRequest, context: Params) {
       },
     });
 
-    console.log('Found menu:', menu);
-
     if (!menu) {
       return Response.json({ error: "Menu introuvable" }, { status: 404 });
     }
 
     // Calculer le ratio pour ajuster les quantités
     const ratio = totalPeople / (menu.numberOfPeople || 1);
-
-    console.log('Updating quantities with ratio:', ratio);
 
     // Mettre à jour le menu et ses ingrédients
     const updatedMenu = await prisma.menu.update({
@@ -78,8 +72,6 @@ export async function PUT(request: NextRequest, context: Params) {
         shoppingItems: true,
       },
     });
-
-    console.log('Updated menu:', updatedMenu);
 
     return Response.json(updatedMenu);
   } catch (error) {

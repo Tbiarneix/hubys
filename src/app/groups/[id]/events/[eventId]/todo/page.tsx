@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { TodoList } from "./TodoList";
 
 interface TodoListPageProps {
   params: Promise<{
@@ -15,17 +16,32 @@ export default async function TodoListPage(props: TodoListPageProps) {
       id: params.eventId,
       groupId: params.id,
     },
+    include: {
+      subgroups: true,
+    },
   });
 
   if (!event?.hasTodoList) {
     redirect(`/groups/${params.id}/events/${params.eventId}`);
   }
 
-  return (
-    <div className="mt-4 pb-20">
-      <div>
-        <p className="text-gray-700">Todo liste</p>
-      </div>
-    </div>
-  );
+  // Récupérer tous les adultes actifs de l'événement
+  const activeAdults = event.subgroups
+    .flatMap((subgroup) => subgroup.adults)
+    .filter((userId, index, self) => self.indexOf(userId) === index);
+
+  // Récupérer les informations des utilisateurs
+  const users = await prisma.user.findMany({
+    where: {
+      id: {
+        in: activeAdults,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return <TodoList activeAdults={users} />;
 }

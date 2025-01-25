@@ -60,6 +60,18 @@ export function PresenceCalendar({
 
   const updateMenuQuantities = async (date: Date, type: 'lunch' | 'dinner', totalPeople: number) => {
     try {
+      // Vérifier d'abord si un menu existe pour cette date et ce type
+      const checkResponse = await fetch(`/api/groups/${params.id}/events/${eventId}/menus?date=${date.toISOString()}&type=${type}`, {
+        method: 'GET',
+      });
+      
+      const menus = await checkResponse.json();
+      if (!menus || menus.length === 0) {
+        // Pas de menu pour cette date et ce type, on ignore silencieusement
+        return;
+      }
+
+      console.log('Updating menu quantities with:', { date, type, totalPeople });
       const response = await fetch(`/api/groups/${params.id}/events/${eventId}/menus/update-quantities`, {
         method: 'PUT',
         headers: {
@@ -73,9 +85,13 @@ export function PresenceCalendar({
       });
 
       if (!response.ok) {
+        const error = await response.json();
+        console.error('Error response:', error);
         throw new Error('Failed to update menu quantities');
       }
 
+      const result = await response.json();
+      console.log('Update result:', result);
       toast.success('Quantités des menus mises à jour');
     } catch (error) {
       console.error('Error updating menu quantities:', error);
@@ -237,6 +253,25 @@ export function PresenceCalendar({
         }
         return p;
       }));
+
+      // Calculer le nombre total de personnes pour ce jour et ce type de repas
+      const totalPeople = presences.reduce((total, p) => {
+        if (new Date(p.date).toDateString() === date.toDateString() && p[type]) {
+          // Si c'est la présence qu'on vient de modifier, utiliser la nouvelle valeur
+          if (p.subgroupId === subgroupId) {
+            return total + newNumber;
+          }
+          // Sinon utiliser la valeur existante
+          return total + (type === 'lunch' ? p.lunchNumber : p.dinnerNumber);
+        }
+        return total;
+      }, 0);
+
+      console.log('Total people for', date.toISOString(), type, ':', totalPeople);
+
+      // Mettre à jour les quantités des menus
+      await updateMenuQuantities(date, type, totalPeople);
+
     } catch (error) {
       console.error('Error updating presence number:', error);
       toast.error('Une erreur est survenue lors de la mise à jour du nombre de présents');

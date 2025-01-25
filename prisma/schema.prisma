@@ -34,6 +34,7 @@ model User {
   receiverAssignments  SecretSantaAssignment[] @relation("ReceiverAssignments")
   addedMenus           Menu[]              @relation("MenuCreator")
   ingredients          Ingredient[]
+  todoItems             TodoItem[]
 
   @@index([email])
 }
@@ -159,6 +160,7 @@ model Event {
   subgroups     Subgroup[]
   presences     SubgroupPresence[]
   shoppingList  ShoppingList?
+  todoItems     TodoItem[]         @relation("EventTodoItems")
 
   @@index([groupId])
 }
@@ -417,6 +419,21 @@ model ShoppingItem {
 
   @@index([menuId])
   @@index([shoppingListId])
+}
+
+model TodoItem {
+  id            String    @id @default(cuid())
+  title         String
+  completed     Boolean   @default(false)
+  assignedToId  String?
+  eventId       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  event         Event     @relation("EventTodoItems", fields: [eventId], references: [id], onDelete: Cascade)
+  assignedTo    User?     @relation(fields: [assignedToId], references: [id])
+
+  @@index([eventId])
+  @@index([assignedToId])
 }
 
 enum Unit {

@@ -58,6 +58,31 @@ export function PresenceCalendar({
     end: new Date(endDate),
   });
 
+  const updateMenuQuantities = async (date: Date, type: 'lunch' | 'dinner', totalPeople: number) => {
+    try {
+      const response = await fetch(`/api/groups/${params.id}/events/${eventId}/menus/update-quantities`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: date.toISOString(),
+          type,
+          totalPeople,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update menu quantities');
+      }
+
+      toast.success('Quantités des menus mises à jour');
+    } catch (error) {
+      console.error('Error updating menu quantities:', error);
+      toast.error('Erreur lors de la mise à jour des quantités des menus');
+    }
+  };
+
   useEffect(() => {
     const fetchPresences = async () => {
       try {
@@ -218,39 +243,6 @@ export function PresenceCalendar({
     }
   };
 
-  const updateMenuQuantities = async (date: Date, type: string, numberOfPeople: number) => {
-    try {
-      // D'abord vérifier s'il y a un menu pour cette date
-      const response = await fetch(`/api/groups/${params.id}/events/${eventId}/menus?date=${date.toISOString()}&type=${type}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la vérification du menu');
-      }
-      const menus = await response.json();
-
-      // Ne mettre à jour que s'il y a un menu
-      if (menus && menus.length > 0) {
-        const updateResponse = await fetch(`/api/groups/${params.id}/events/${eventId}/menus/update-quantities`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            date: date.toISOString(),
-            type,
-            numberOfPeople,
-          }),
-        });
-
-        if (!updateResponse.ok) {
-          throw new Error('Erreur lors de la mise à jour des quantités');
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Impossible de mettre à jour les quantités des menus");
-    }
-  };
-
   if (isLoading) {
     return <div className="flex justify-center items-center h-32">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -369,7 +361,7 @@ export function PresenceCalendar({
                           ? "cursor-pointer bg-yellow-50 hover:bg-yellow-100"
                           : [
                               "cursor-default",
-                              isPresent(subgroup.id, day, 'lunch') ? "bg-green-500" : "bg-gray-100"
+                              isPresent(subgroup.id, day, 'lunch') ? "bg-green-500" : (canEdit ? "bg-yellow-50" : "bg-gray-100")
                             ]
                       )}
                       onClick={() => {
@@ -434,7 +426,7 @@ export function PresenceCalendar({
                           ? "cursor-pointer bg-yellow-50 hover:bg-yellow-100"
                           : [
                               "cursor-default",
-                              isPresent(subgroup.id, day, 'dinner') ? "bg-green-500" : "bg-gray-100"
+                              isPresent(subgroup.id, day, 'dinner') ? "bg-green-500" : (canEdit ? "bg-yellow-50" : "bg-gray-100")
                             ]
                       )}
                       onClick={() => {

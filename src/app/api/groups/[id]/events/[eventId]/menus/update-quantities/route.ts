@@ -8,7 +8,7 @@ type Params = {
 }
 
 // Mettre à jour les quantités des menus et des ingrédients
-export async function POST(request: NextRequest, context: Params) {
+export async function PUT(request: NextRequest, context: Params) {
   const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -31,9 +31,9 @@ export async function POST(request: NextRequest, context: Params) {
     }
 
     const data = await request.json();
-    const { date, type, numberOfPeople } = data;
+    const { date, type, totalPeople } = data;
 
-    console.log('Updating menu quantities:', { date, type, numberOfPeople, eventId: params.eventId });
+    console.log('Updating menu quantities:', { date, type, totalPeople, eventId: params.eventId });
 
     // Récupérer le menu pour cette date et ce type
     const menu = await prisma.menu.findFirst({
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, context: Params) {
     }
 
     // Calculer le ratio pour ajuster les quantités
-    const ratio = numberOfPeople / (menu.numberOfPeople || 1);
+    const ratio = totalPeople / (menu.numberOfPeople || 1);
 
     console.log('Updating quantities with ratio:', ratio);
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest, context: Params) {
         id: menu.id,
       },
       data: {
-        numberOfPeople: Math.round(numberOfPeople),
+        numberOfPeople: Math.round(totalPeople),
         shoppingItems: {
           updateMany: menu.shoppingItems.map(item => ({
             where: { id: item.id },

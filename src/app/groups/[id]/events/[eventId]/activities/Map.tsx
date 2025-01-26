@@ -49,17 +49,19 @@ export default function Map({ className }: MapProps) {
   }, []);
 
   return (
-    <MapContainer
-      className={`w-full h-[400px] rounded-lg ${className || ""}`}
-      center={userLocation}
-      zoom={13}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors and <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>'
-        url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-      />
-      <MapUpdater center={userLocation} zoom={13} />
-    </MapContainer>
+    <div className={`relative w-full h-[400px] rounded-lg ${className || ""}`}>
+      <MapContainer
+        className="absolute inset-0"
+        center={userLocation}
+        zoom={13}
+        scrollWheelZoom={false}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors and <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>'
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+        />
+        <MapUpdater center={userLocation} zoom={13} />
+      </MapContainer>
+    </div>
   );
 }

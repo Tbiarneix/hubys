@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 type Params = {
-  params: Promise<{ locationId: string }>
+  params: Promise<{ rentalId: string }>
 }
 
 export async function DELETE(
@@ -18,10 +18,10 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Vérifier si la location existe et récupérer l'eventId
-    const location = await prisma.location.findUnique({
+    // Vérifier si la rental existe et récupérer l'eventId
+    const rental = await prisma.rental.findUnique({
       where: {
-        id: params.locationId,
+        id: params.rentalId,
       },
       include: {
         event: {
@@ -36,12 +36,12 @@ export async function DELETE(
       },
     });
 
-    if (!location) {
-      return new NextResponse("Location not found", { status: 404 });
+    if (!rental) {
+      return new NextResponse("Rental not found", { status: 404 });
     }
 
     // Vérifier si l'utilisateur est membre du groupe
-    const isMember = location.event.group.members.some(
+    const isMember = rental.event.group.members.some(
       (member: { userId: string }) => member.userId === session.user.id
     );
 
@@ -49,16 +49,16 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Supprimer la location
-    await prisma.location.delete({
+    // Supprimer la rental
+    await prisma.rental.delete({
       where: {
-        id: params.locationId,
+        id: params.rentalId,
       },
     });
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("[LOCATION_DELETE]", error);
+    console.error("[RENTAL_DELETE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 } 

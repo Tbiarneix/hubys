@@ -1,4 +1,4 @@
-import { Location } from "@/types/location";
+import { Rental } from "@/types/rental";
 import {
   ExternalLink,
   ThumbsUp,
@@ -9,37 +9,37 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { DeleteLocationModal } from "./DeleteLocationModal";
+import { DeleteRentalModal } from "./DeleteRentalModal";
 
-interface LocationCardProps {
-  location: Location;
-  onSelect: (location: Location) => void;
+interface RentalCardProps {
+  rental: Rental;
+  onSelect: (rental: Rental) => void;
   isSelected: boolean;
 }
 
-export function LocationCard({
-  location,
+export function RentalCard({
+  rental,
   onSelect,
   isSelected,
-}: LocationCardProps) {
+}: RentalCardProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const totalPoints = location.votes.reduce((sum, vote) => sum + vote.value, 0);
-  const userVotes = location.votes.filter(
+  const totalPoints = rental.votes.reduce((sum, vote) => sum + vote.value, 0);
+  const userVotes = rental.votes.filter(
     (vote) => vote.userId === session?.user?.id
   );
 
   const handleVote = async (value: number) => {
     try {
-      const response = await fetch("/api/locations/vote", {
+      const response = await fetch("/api/rentals/vote", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          locationId: location.id,
+          rentalId: rental.id,
           value,
         }),
       });
@@ -59,7 +59,7 @@ export function LocationCard({
             ? "border-gray-900 ring-2 ring-gray-900"
             : "hover:border-gray-400"
         }`}
-        onClick={() => onSelect(location)}
+        onClick={() => onSelect(rental)}
       >
         <button
           onClick={(e) => {
@@ -74,13 +74,13 @@ export function LocationCard({
         <div className="flex justify-between mb-4">
           <div className="relative w-24 h-24">
             <Image
-              src={location.image}
-              alt={location.title}
+              src={rental.image}
+              alt={rental.title}
               fill
               className="object-cover rounded"
             />
           </div>
-          <h3 className="font-medium text-gray-800 w-1/2">{location.title}</h3>
+          <h3 className="font-medium text-gray-800 w-1/2">{rental.title}</h3>
         </div>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -112,12 +112,12 @@ export function LocationCard({
               <ThumbsDown className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-m text-gray-700 mt-1">{location.amount} €</p>
+          <p className="text-m text-gray-700 mt-1">{rental.amount} €</p>
           <button
             className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={(e) => {
               e.stopPropagation();
-              window.open(location.url, "_blank");
+              window.open(rental.url, "_blank");
             }}
           >
             <ExternalLink className="w-4 h-4 mr-1" />
@@ -126,11 +126,11 @@ export function LocationCard({
         </div>
       </div>
 
-      <DeleteLocationModal
+      <DeleteRentalModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        locationId={location.id}
-        title={location.title}
+        rentalId={rental.id}
+        title={rental.title}
       />
     </>
   );

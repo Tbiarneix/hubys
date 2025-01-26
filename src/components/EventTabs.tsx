@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 
 interface Event {
   id: string;
-  hasLocation: boolean;
+  hasRental: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
   hasTodoList: boolean;
@@ -45,10 +45,10 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
         >
           Vue d'ensemble
         </Link>
-        {event.hasLocation && (
+        {event.hasRental && (
           <Link
-            href={`${basePath}/location`}
-            className={tabStyle(pathname.includes("/location"))}
+            href={`${basePath}/rental`}
+            className={tabStyle(pathname.includes("/rental"))}
           >
             Location
           </Link>

@@ -10,28 +10,28 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { locationId, value } = await req.json();
+    const { rentalId, value } = await req.json();
 
     // Check if user already voted
-    const existingVote = await prisma.locationVote.findFirst({
+    const existingVote = await prisma.rentalVote.findFirst({
       where: {
-        locationId,
+        rentalId,
         userId: session.user.id,
       },
     });
 
     if (existingVote) {
       // Update existing vote
-      const vote = await prisma.locationVote.update({
+      const vote = await prisma.rentalVote.update({
         where: { id: existingVote.id },
         data: { value },
       });
       return NextResponse.json(vote);
     } else {
       // Create new vote
-      const vote = await prisma.locationVote.create({
+      const vote = await prisma.rentalVote.create({
         data: {
-          locationId,
+          rentalId,
           userId: session.user.id,
           value,
         },
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json(vote);
     }
   } catch (error) {
-    console.error("Error voting for location:", error);
+    console.error("Error voting for rental:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

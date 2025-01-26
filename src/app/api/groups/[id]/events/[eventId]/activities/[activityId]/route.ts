@@ -25,7 +25,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, duration, url, location, uniquePrice, babyPrice, childPrice, adultPrice, date } = body;
+    const { title, duration, url, rental, uniquePrice, babyPrice, childPrice, adultPrice, date } = body;
 
     if (duration && !Object.values(ActivityDuration).includes(duration)) {
       return NextResponse.json(
@@ -75,7 +75,7 @@ export async function PATCH(
         ...(title && { title }),
         ...(duration && { duration }),
         ...(url !== undefined && { url }),
-        ...(location !== undefined && { location }),
+        ...(rental !== undefined && { rental }),
         ...(uniquePrice !== undefined && { uniquePrice }),
         ...(babyPrice !== undefined && { babyPrice }),
         ...(childPrice !== undefined && { childPrice }),

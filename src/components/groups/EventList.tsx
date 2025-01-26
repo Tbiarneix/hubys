@@ -13,7 +13,7 @@ interface Event {
   createdAt: string;
   startDate: string;
   endDate: string;
-  hasLocation: boolean;
+  hasRental: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
   hasShopping: boolean;
@@ -91,9 +91,9 @@ export default function EventList({ groupId }: EventListProps) {
             <Calendar className="h-5 w-5 text-gray-400" />
           </div>
           <div className="flex flex-wrap gap-2">
-            {event.hasLocation && (
+            {event.hasRental && (
               <span className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
-                Location
+                Rental
               </span>
             )}
             {event.hasCalendar && (

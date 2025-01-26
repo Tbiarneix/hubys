@@ -1,7 +1,7 @@
-import LocationClient from "./LocationClient";
+import RentalClient from "./RentalClient";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Subgroup as LocationSubgroup, Location, LocationSettings } from "@/types/location";
+import { Subgroup as RentalSubgroup, Rental, RentalSettings } from "@/types/rental";
 
 interface EventPageProps {
   params: Promise<{
@@ -10,13 +10,13 @@ interface EventPageProps {
   }>;
 }
 
-interface LocationData {
-  locations: Location[];
-  subgroups: LocationSubgroup[];
-  settings: LocationSettings;
+interface RentalData {
+  rentals: Rental[];
+  subgroups: RentalSubgroup[];
+  settings: RentalSettings;
 }
 
-async function getData(context: EventPageProps): Promise<LocationData> {
+async function getData(context: EventPageProps): Promise<RentalData> {
   const params = await context.params;
   
   const event = await prisma.event.findUnique({
@@ -25,7 +25,7 @@ async function getData(context: EventPageProps): Promise<LocationData> {
       groupId: params.id,
     },
     include: {
-      locations: {
+      rentals: {
         include: {
           votes: true
         }
@@ -44,7 +44,7 @@ async function getData(context: EventPageProps): Promise<LocationData> {
     }
   });
 
-  const locationsubgroups = await prisma.subgroup.findMany({
+  const rentalsubgroups = await prisma.subgroup.findMany({
     where: {
       eventId: params.eventId
     },
@@ -59,7 +59,7 @@ async function getData(context: EventPageProps): Promise<LocationData> {
   const activeChildren = await prisma.child.findMany({
     where: {
       id: {
-        in: locationsubgroups.flatMap(s => s.activeChildren)
+        in: rentalsubgroups.flatMap(s => s.activeChildren)
       }
     },
     select: {
@@ -70,7 +70,7 @@ async function getData(context: EventPageProps): Promise<LocationData> {
 
   const childrenMap = new Map(activeChildren.map(child => [child.id, child]));
 
-  const transformedSubgroups: LocationSubgroup[] = locationsubgroups.map(subgroup => {
+  const transformedSubgroups: RentalSubgroup[] = rentalsubgroups.map(subgroup => {
     // Trouver les utilisateurs adultes correspondants
     const adults = subgroup.activeAdults.map(userId => {
       const member = event?.group.members.find(m => m.userId === userId);
@@ -100,12 +100,12 @@ async function getData(context: EventPageProps): Promise<LocationData> {
     redirect(`/groups/${params.id}`);
   }
 
-  if (!event.hasLocation) {
+  if (!event.hasRental) {
     redirect(`/groups/${params.id}/events/${params.eventId}`);
   }
 
   return {
-    locations: event.locations,
+    rentals: event.rentals,
     subgroups: transformedSubgroups,
     settings: {
       adultShare: event.adultShare,
@@ -114,16 +114,16 @@ async function getData(context: EventPageProps): Promise<LocationData> {
   };
 }
 
-export default async function LocationPage({ 
+export default async function RentalPage({ 
   params 
 }: EventPageProps) {
   const { eventId, id } = await params;
   const data = await getData({ params });
 
   return (
-    <LocationClient 
+    <RentalClient 
       initialData={{
-        locations: data.locations,
+        rentals: data.rentals,
         subgroups: data.subgroups,
         settings: data.settings
       }} 

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     // Get OG data from URL
     const ogData = await getOgData(url);
 
-    const location = await prisma.location.create({
+    const rental = await prisma.rental.create({
       data: {
         eventId,
         url,
@@ -27,9 +27,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(location);
+    return NextResponse.json(rental);
   } catch (error) {
-    console.error("Error creating location:", error);
+    console.error("Error creating rental:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

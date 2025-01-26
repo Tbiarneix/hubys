@@ -53,7 +53,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, options, startDate, endDate } = await request.json();
+    const { name, options, startDate, endDate, location } = await request.json();
 
     if (!name || !startDate || !endDate) {
       return NextResponse.json(
@@ -144,6 +144,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         groupId: params.id,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        location: location || null,
         hasRental: options?.rental ?? true,
         hasCalendar: true,
         hasMenus: options?.menus ?? true,

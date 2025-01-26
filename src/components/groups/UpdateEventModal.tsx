@@ -1,36 +1,56 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Dialog, Switch } from '@headlessui/react';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { LocationAutocomplete } from '../LocationAutocomplete';
 
-interface CreateEventModalProps {
+interface UpdateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   groupId: string;
+  eventId: string;
+  initialData: {
+    name: string;
+    startDate: Date;
+    endDate: Date;
+    location: string | undefined;
+    options: {
+      rental: boolean;
+      menus: boolean;
+      shopping: boolean;
+      activities: boolean;
+      photos: boolean;
+      accounts: boolean;
+    };
+  };
 }
 
-export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalProps) {
-  const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+export function UpdateEventModal({ isOpen, onClose, groupId, eventId, initialData }: UpdateEventModalProps) {
+  const [name, setName] = useState(initialData.name);
+  const [startDate, setStartDate] = useState(initialData.startDate);
+  const [endDate, setEndDate] = useState(initialData.endDate);
+  const [location, setLocation] = useState(initialData.location || '');
+  const [isUpdating, setIsUpdating] = useState(false);
   const router = useRouter();
-  const [options, setOptions] = useState({
-    rental: true,
-    menus: true,
-    shopping: true,
-    activities: true,
-    photos: true,
-    accounts: true,
-  });
+  const [options, setOptions] = useState(initialData.options);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(initialData.name);
+      setStartDate(initialData.startDate);
+      setEndDate(initialData.endDate);
+      setLocation(initialData.location || '');
+      setOptions(initialData.options);
+    }
+  }, [isOpen, initialData]);
+
+  console.log(startDate.toISOString().split('T')[0]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !startDate || !endDate || isCreating) return;
+    if (!name.trim() || !startDate || !endDate || isUpdating) return;
 
     if (new Date(startDate) > new Date(endDate)) {
       toast.error("La date de début doit être antérieure à la date de fin");
@@ -38,35 +58,33 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
     }
 
     try {
-      setIsCreating(true);
-      const response = await fetch(`/api/groups/${groupId}/events`, {
-        method: 'POST',
+      setIsUpdating(true);
+      const response = await fetch(`/api/groups/${groupId}/events/${eventId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: name,
-          startDate: new Date(startDate + 'T12:00:00').toISOString(),
-          endDate: new Date(endDate + 'T12:00:00').toISOString(),
+          startDate: startDate,
+          endDate: endDate,
           location: location || null,
           options,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create event');
+        throw new Error('Failed to update event');
       }
 
-      const event = await response.json();
-      toast.success("Événement créé avec succès");
+      toast.success("Événement mis à jour avec succès");
       router.refresh();
       onClose();
-      router.push(`/groups/${groupId}/events/${event.id}`);
     } catch (error) {
-      console.error('Error creating event:', error);
-      toast.error("Erreur lors de la création de l'événement");
+      console.error('Error updating event:', error);
+      toast.error("Erreur lors de la mise à jour de l'événement");
     } finally {
-      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
 
@@ -86,7 +104,7 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
         <Dialog.Panel className="mx-auto max-w-lg w-full rounded-xl bg-white p-6">
           <div className="flex justify-between items-center mb-6">
             <Dialog.Title className="text-lg font-semibold text-gray-800">
-              Créer un événement
+              Modifier l'événement
             </Dialog.Title>
             <button
               onClick={onClose}
@@ -130,8 +148,8 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
                 <input
                   type="date"
                   id="startDate"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  value={startDate.toISOString().split('T')[0]}
+                  onChange={(e) => setStartDate(new Date(e.target.value + 'T12:00:00'))}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black sm:text-sm"
                   required
                 />
@@ -144,8 +162,8 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
                 <input
                   type="date"
                   id="endDate"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  value={endDate.toISOString().split('T')[0]}
+                  onChange={(e) => setEndDate(new Date(e.target.value + 'T12:00:00'))}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black sm:text-sm"
                   required
                 />
@@ -187,10 +205,10 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
               </button>
               <button
                 type="submit"
-                disabled={isCreating || !name.trim() || !startDate || !endDate}
+                disabled={isUpdating || !name.trim() || !startDate || !endDate}
                 className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreating ? 'Création...' : 'Créer'}
+                {isUpdating ? 'Mise à jour...' : 'Mettre à jour'}
               </button>
             </div>
           </form>

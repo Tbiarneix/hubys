@@ -19,8 +19,8 @@ const createActivitySchema = z.object({
 
 type Params = {
   params: Promise<{
-    groupId: string;
-    eventId: string;
+  groupId: string;
+  eventId: string;
   }>
 }
 
@@ -32,6 +32,7 @@ export async function GET(
   const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
@@ -45,11 +46,21 @@ export async function GET(
       },
       include: {
         participants: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            },
+            child: {
+              select: {
+                id: true,
+                firstName: true,
+              }
+            }
+          }
         },
       },
       orderBy: {
@@ -57,11 +68,22 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(activities);
+    // Transformer les données pour avoir un format uniforme
+    const formattedActivities = activities.map(activity => ({
+      ...activity,
+      participants: activity.participants.map(participant => ({
+        id: participant.id,
+        name: participant.user?.name || participant.child?.firstName || '',
+        email: participant.user?.email || null,
+        isPresent: participant.isPresent,
+      }))
+    }));
+
+    return NextResponse.json(formattedActivities);
   } catch (error) {
-    console.error("Erreur lors de la récupération des activités:", error);
+    console.error("[GET_ACTIVITIES]", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération des activités" },
+      { error: "Une erreur est survenue lors de la récupération des activités" },
       { status: 500 }
     );
   }

@@ -71,7 +71,7 @@ export function CreateEventModal({ isOpen, onClose, groupId }: CreateEventModalP
   };
 
   const optionLabels: Record<string, string> = {
-    rental: 'Rental',
+    rental: 'Location',
     menus: 'Menus',
     shopping: 'Liste de courses',
     activities: 'Activités',

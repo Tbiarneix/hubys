@@ -1,6 +1,6 @@
 "use client";
 
-import { format, eachDayOfInterval, setHours, isSameDay } from "date-fns";
+import { format, eachDayOfInterval, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -8,8 +8,8 @@ import { Activity } from "@prisma/client";
 import { useParams } from "next/navigation";
 import { CreateActivityModal } from "./CreateActivityModal";
 import { UpdateActivityModal } from "./UpdateActivityModal";
-import { SubscribeActivityModal } from "./SubscribeActivityModal";
-import { Pencil } from "lucide-react";
+import SubscribeActivityModal from "./SubscribeActivityModal";
+import { Pencil, Plus } from "lucide-react";
 
 interface ActivitiesCalendarProps {
   startDate: Date;
@@ -21,7 +21,6 @@ export default function ActivitiesCalendar({
   endDate,
 }: ActivitiesCalendarProps) {
   const params = useParams();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
@@ -51,21 +50,19 @@ export default function ActivitiesCalendar({
     fetchActivities();
   }, [params.id, params.eventId]);
 
-  const handleCellClick = (date: Date, isMorning: boolean) => {
-    const activityDate = setHours(date, isMorning ? 9 : 14);
-    setSelectedDate(activityDate);
-    setIsCreateModalOpen(true);
-  };
-
   const handleEditClick = (e: React.MouseEvent, activity: Activity) => {
-    e.stopPropagation();
-    setSelectedActivity(activity);
-    setIsUpdateModalOpen(true);
+    if (activity) {
+      e.stopPropagation();
+      setSelectedActivity(activity);
+      setIsUpdateModalOpen(true);
+    }
   };
 
   const handleActivityClick = (activity: Activity) => {
-    setSelectedActivity(activity);
-    setIsSubscribeModalOpen(true);
+    if (activity) {
+      setSelectedActivity(activity);
+      setIsSubscribeModalOpen(true);
+    }
   };
 
   const getActivitiesForPeriod = (date: Date, isMorning: boolean) => {
@@ -83,143 +80,143 @@ export default function ActivitiesCalendar({
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900">Planning</h2>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="h-5 w-5" />
+            Ajouter une activité
+          </button>
         </div>
-        <div className="grid grid-cols-[auto,1fr]">
-          <div>
-            {/* Labels de gauche */}
-            <div className="h-12" /> {/* Espace pour l'en-tête des dates */}
-            <div className="flex justify-between">
-              <div className="h-48 px-2 w-full flex flex-col justify-center text-sm font-medium bg-white text-gray-700 border relative">
-                <p>Activités</p>
-              </div>
-              <div>
-                <div
-                  className={cn(
-                    "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
-                  )}
-                >
-                  Matin
+        <div className="space-y-4">
+          <div className="grid grid-cols-[auto,1fr]">
+            <div>
+              {/* Labels de gauche */}
+              <div className="h-12" /> {/* Espace pour l'en-tête des dates */}
+              <div className="flex justify-between">
+                <div className="h-48 px-2 w-full flex flex-col justify-center text-sm font-medium bg-white text-gray-700 border relative">
+                  <p>Activités</p>
                 </div>
-                <div
-                  className={cn(
-                    "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
-                  )}
-                >
-                  Après-midi
+                <div>
+                  <div
+                    className={cn(
+                      "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
+                    )}
+                  >
+                    Matin
+                  </div>
+                  <div
+                    className={cn(
+                      "h-24 px-2 border flex items-center justify-center bg-white text-gray-700"
+                    )}
+                  >
+                    Après-midi
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <div
-              className="grid"
-              style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}
-            >
-              {/* En-tête avec les dates */}
-              {days.map((day, index) => (
-                <div
-                  key={`${day.toISOString()}-${index}`}
-                  className="h-12 px-2 flex items-center justify-center border-b text-sm font-medium text-gray-700"
-                >
-                  {format(day, "EEE d", { locale: fr })}
-                </div>
-              ))}
-              {/* Ligne des activités du matin */}
-              {days.map((day, index) => (
-                <div
-                  key={`${day.toISOString()}-${index}-morning`}
-                  onClick={() => handleCellClick(day, true)}
-                  className={cn(
-                    "h-24 border flex flex-col gap-1 p-1 text-sm bg-gray-100 cursor-pointer hover:bg-gray-200"
-                  )}
-                >
-                  {getActivitiesForPeriod(day, true).map((activity) => (
-                    <div
-                      key={activity.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleActivityClick(activity);
-                      }}
-                      className="flex items-center justify-between bg-white rounded px-2 py-1 border border-gray-200 hover:border-gray-300"
-                    >
-                      <span className="truncate">{activity.title}</span>
-                      <button
-                        onClick={(e) => handleEditClick(e, activity)}
-                        className="p-1 hover:bg-gray-100 rounded"
+            <div className="overflow-x-auto">
+              <div
+                className="grid"
+                style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}
+              >
+                {/* En-tête avec les dates */}
+                {days.map((day, index) => (
+                  <div
+                    key={`${day.toISOString()}-${index}`}
+                    className="h-12 px-2 flex items-center justify-center border-b text-sm font-medium text-gray-700"
+                  >
+                    {format(day, "EEE d", { locale: fr })}
+                  </div>
+                ))}
+                {/* Ligne des activités du matin */}
+                {days.map((day, index) => (
+                  <div
+                    key={`${day.toISOString()}-${index}-morning`}
+                    className={cn(
+                      "h-24 border flex flex-col gap-1 p-1 text-sm bg-gray-100"
+                    )}
+                  >
+                    {getActivitiesForPeriod(day, true).map((activity) => (
+                      <div
+                        key={activity.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleActivityClick(activity);
+                        }}
+                        className="flex items-center justify-between bg-white rounded px-2 py-1 border border-gray-200 hover:border-gray-300"
                       >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))}
-              {/* Ligne des activités de l'après-midi */}
-              {days.map((day, index) => (
-                <div
-                  key={`${day.toISOString()}-${index}-afternoon`}
-                  onClick={() => handleCellClick(day, false)}
-                  className={cn(
-                    "h-24 border flex flex-col gap-1 p-1 text-sm bg-gray-100 cursor-pointer hover:bg-gray-200"
-                  )}
-                >
-                  {getActivitiesForPeriod(day, false).map((activity) => (
-                    <div
-                      key={activity.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleActivityClick(activity);
-                      }}
-                      className="flex items-center justify-between bg-white rounded px-2 py-1 border border-gray-200 hover:border-gray-300"
-                    >
-                      <span className="truncate">{activity.title}</span>
-                      <button
-                        onClick={(e) => handleEditClick(e, activity)}
-                        className="p-1 hover:bg-gray-100 rounded"
+                        <span className="truncate">{activity.title}</span>
+                        <button
+                          onClick={(e) => handleEditClick(e, activity)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {/* Ligne des activités de l'après-midi */}
+                {days.map((day, index) => (
+                  <div
+                    key={`${day.toISOString()}-${index}-afternoon`}
+                    className={cn(
+                      "h-24 border flex flex-col gap-1 p-1 text-sm bg-gray-100"
+                    )}
+                  >
+                    {getActivitiesForPeriod(day, false).map((activity) => (
+                      <div
+                        key={activity.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleActivityClick(activity);
+                        }}
+                        className="flex items-center justify-between bg-white rounded px-2 py-1 border border-gray-200 hover:border-gray-300"
                       >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))}
+                        <span className="truncate">{activity.title}</span>
+                        <button
+                          onClick={(e) => handleEditClick(e, activity)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {selectedDate && (
-        <CreateActivityModal
-          isOpen={isCreateModalOpen}
-          onClose={() => {
-            setIsCreateModalOpen(false);
-            setSelectedDate(null);
-          }}
-          date={selectedDate}
-          onAdd={fetchActivities}
-        />
-      )}
+      <CreateActivityModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onAdd={fetchActivities}
+        startDate={startDate}
+        endDate={endDate}
+      />
 
-      {selectedActivity && (
-        <>
-          <UpdateActivityModal
-            isOpen={isUpdateModalOpen}
-            onClose={() => {
-              setIsUpdateModalOpen(false);
-              setSelectedActivity(null);
-            }}
-            activity={selectedActivity}
-            onUpdate={fetchActivities}
-          />
-          <SubscribeActivityModal
-            isOpen={isSubscribeModalOpen}
-            onClose={() => {
-              setIsSubscribeModalOpen(false);
-              setSelectedActivity(null);
-            }}
-            activity={selectedActivity}
-          />
-        </>
-      )}
+      <SubscribeActivityModal
+        isOpen={isSubscribeModalOpen}
+        onClose={() => {
+          setIsSubscribeModalOpen(false);
+          setSelectedActivity(null);
+        }}
+        activity={selectedActivity!}
+      />
+
+      <UpdateActivityModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          setSelectedActivity(null);
+        }}
+        activity={selectedActivity!}
+        onUpdate={fetchActivities}
+      />
     </div>
   );
 }

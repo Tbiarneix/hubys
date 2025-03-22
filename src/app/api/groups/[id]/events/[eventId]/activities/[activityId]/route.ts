@@ -34,35 +34,6 @@ export async function PATCH(
       );
     }
 
-    // Si une date est fournie, vérifier qu'elle est dans la plage de l'événement
-    // if (date) {
-    //   const event = await prisma.event.findUnique({
-    //     where: {
-    //       id: params.eventId,
-    //       groupId: params.groupId,
-    //     },
-    //     select: {
-    //       startDate: true,
-    //       endDate: true,
-    //     },
-    //   });
-
-    //   if (!event) {
-    //     return NextResponse.json(
-    //       { error: "Événement non trouvé" },
-    //       { status: 404 }
-    //     );
-    //   }
-
-    //   const activityDate = new Date(date);
-    //   if (activityDate < event.startDate || activityDate > event.endDate) {
-    //     return NextResponse.json(
-    //       { error: "La date doit être comprise dans la période de l'événement" },
-    //       { status: 400 }
-    //     );
-    //   }
-    // }
-
     const activity = await prisma.activity.update({
       where: {
         id: params.activityId,

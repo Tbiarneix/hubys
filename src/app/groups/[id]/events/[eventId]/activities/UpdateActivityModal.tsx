@@ -11,7 +11,7 @@ import { useParams } from 'next/navigation';
 interface UpdateActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activity: Activity;
+  activity: Activity | null;
   onUpdate?: () => void;
 }
 
@@ -26,28 +26,31 @@ export function UpdateActivityModal({
   const params = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [title, setTitle] = useState(activity.title);
-  const [duration, setDuration] = useState<ActivityDuration>(activity.duration);
-  const [url, setUrl] = useState(activity.url || '');
-  const [location, setLocation] = useState(activity.location || '');
-  const [priceType, setPriceType] = useState<PriceType>(activity.uniquePrice !== null ? 'unique' : 'differentiated');
-  const [uniquePrice, setUniquePrice] = useState(activity.uniquePrice?.toString() || '');
-  const [babyPrice, setBabyPrice] = useState(activity.babyPrice?.toString() || '');
-  const [childPrice, setChildPrice] = useState(activity.childPrice?.toString() || '');
-  const [adultPrice, setAdultPrice] = useState(activity.adultPrice?.toString() || '');
+  const [title, setTitle] = useState('');
+  const [duration, setDuration] = useState<ActivityDuration>('HALF_DAY');
+  const [url, setUrl] = useState('');
+  const [location, setLocation] = useState('');
+  const [priceType, setPriceType] = useState<PriceType>('unique');
+  const [uniquePrice, setUniquePrice] = useState('');
+  const [babyPrice, setBabyPrice] = useState('');
+  const [childPrice, setChildPrice] = useState('');
+  const [adultPrice, setAdultPrice] = useState('');
 
-  // Mettre à jour les états quand l'activité change
   useEffect(() => {
-    setTitle(activity.title);
-    setDuration(activity.duration);
-    setUrl(activity.url || '');
-    setLocation(activity.location || '');
-    setPriceType(activity.uniquePrice !== null ? 'unique' : 'differentiated');
-    setUniquePrice(activity.uniquePrice?.toString() || '');
-    setBabyPrice(activity.babyPrice?.toString() || '');
-    setChildPrice(activity.childPrice?.toString() || '');
-    setAdultPrice(activity.adultPrice?.toString() || '');
+    if (activity) {
+      setTitle(activity.title);
+      setDuration(activity.duration);
+      setUrl(activity.url || '');
+      setLocation(activity.location || '');
+      setPriceType(activity.uniquePrice !== null ? 'unique' : 'differentiated');
+      setUniquePrice(activity.uniquePrice?.toString() || '');
+      setBabyPrice(activity.babyPrice?.toString() || '');
+      setChildPrice(activity.childPrice?.toString() || '');
+      setAdultPrice(activity.adultPrice?.toString() || '');
+    }
   }, [activity]);
+
+  if (!activity) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,15 +106,15 @@ export function UpdateActivityModal({
       );
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la suppression du repas");
+        throw new Error("Erreur lors de la suppression de l'activité");
       }
 
-      toast.success("Repas supprimé avec succès");
+      toast.success("Activité supprimée avec succès");
       onUpdate?.();
       onClose();
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Impossible de supprimer le repas");
+      toast.error("Impossible de supprimer l'activité");
     } finally {
       setIsDeleting(false);
     }

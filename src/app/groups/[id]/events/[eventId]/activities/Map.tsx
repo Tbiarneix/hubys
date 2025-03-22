@@ -51,7 +51,7 @@ export default function Map({ className }: MapProps) {
   return (
     <div className={`relative w-full h-[400px] rounded-lg ${className || ""}`}>
       <MapContainer
-        className="absolute inset-0"
+        className="absolute inset-0 z-0"
         center={userLocation}
         zoom={13}
         scrollWheelZoom={false}

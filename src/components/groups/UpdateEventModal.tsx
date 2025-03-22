@@ -89,7 +89,7 @@ export function UpdateEventModal({ isOpen, onClose, groupId, eventId, initialDat
   };
 
   const optionLabels: Record<string, string> = {
-    rental: 'Rental',
+    rental: 'Location',
     menus: 'Menus',
     shopping: 'Liste de courses',
     activities: 'Activités',

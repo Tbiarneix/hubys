@@ -4,29 +4,33 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { ActivityDuration } from '@prisma/client';
 import { toast } from 'sonner';
 import { useParams } from 'next/navigation';
+import { format, eachDayOfInterval } from 'date-fns';
 
 interface CreateActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  date: Date;
   onAdd?: () => void;
+  startDate: Date;
+  endDate: Date;
 }
 
 type PriceType = 'unique' | 'differentiated';
+type TimeOfDay = 'morning' | 'afternoon' | 'fullday';
 
 export function CreateActivityModal({
   isOpen,
   onClose,
-  date,
-  onAdd
+  onAdd,
+  startDate,
+  endDate,
 }: CreateActivityModalProps) {
   const params = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState<ActivityDuration>('HALF_DAY');
+  const [selectedDate, setSelectedDate] = useState<Date>(startDate);
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('morning');
   const [url, setUrl] = useState('');
   const [location, setLocation] = useState('');
   const [priceType, setPriceType] = useState<PriceType>('unique');
@@ -34,6 +38,11 @@ export function CreateActivityModal({
   const [babyPrice, setBabyPrice] = useState('');
   const [childPrice, setChildPrice] = useState('');
   const [adultPrice, setAdultPrice] = useState('');
+
+  const days = eachDayOfInterval({
+    start: new Date(startDate),
+    end: new Date(endDate),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +55,16 @@ export function CreateActivityModal({
     try {
       setIsSubmitting(true);
 
+      // Définir l'heure en fonction du moment de la journée
+      const activityDate = new Date(selectedDate);
+      if (timeOfDay === 'morning') {
+        activityDate.setHours(9, 0, 0, 0);
+      } else if (timeOfDay === 'afternoon') {
+        activityDate.setHours(14, 0, 0, 0);
+      } else {
+        activityDate.setHours(9, 0, 0, 0);
+      }
+
       const response = await fetch(`/api/groups/${params.id}/events/${params.eventId}/activities`, {
         method: 'POST',
         headers: {
@@ -53,14 +72,14 @@ export function CreateActivityModal({
         },
         body: JSON.stringify({
           title: title.trim(),
-          duration,
+          duration: timeOfDay === 'fullday' ? 'FULL_DAY' : 'HALF_DAY',
           url: url || null,
           location: location || null,
           uniquePrice: priceType === 'unique' ? (uniquePrice ? parseFloat(uniquePrice) : null) : null,
           babyPrice: priceType === 'differentiated' ? (babyPrice ? parseFloat(babyPrice) : null) : null,
           childPrice: priceType === 'differentiated' ? (childPrice ? parseFloat(childPrice) : null) : null,
           adultPrice: priceType === 'differentiated' ? (adultPrice ? parseFloat(adultPrice) : null) : null,
-          date: date.toISOString(),
+          date: activityDate.toISOString(),
         }),
       });
 
@@ -99,106 +118,127 @@ export function CreateActivityModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Titre */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Titre *
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Titre de l'activité *
               </label>
               <input
                 type="text"
-                id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 required
               />
             </div>
 
-            {/* Durée */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Durée *
+                Date *
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <select
+                value={format(selectedDate, 'yyyy-MM-dd')}
+                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                required
+              >
+                {days.map((day) => (
+                  <option key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
+                    {format(day, 'dd MMMM yyyy')}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Moment de la journée *
+              </label>
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setDuration('HALF_DAY')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    duration === 'HALF_DAY'
-                      ? 'bg-gray-900 text-white border-gray-700'
-                      : 'bg-gray-100 text-gray-700 border-gray-200'
-                  } border`}
+                  onClick={() => setTimeOfDay('morning')}
+                  className={`px-4 py-2 rounded-lg border ${
+                    timeOfDay === 'morning'
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
-                  Demi-journée
+                  Matin
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDuration('FULL_DAY')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    duration === 'FULL_DAY'
-                      ? 'bg-gray-900 text-white border-gray-700'
-                      : 'bg-gray-100 text-gray-700 border-gray-200'
-                  } border`}
+                  onClick={() => setTimeOfDay('afternoon')}
+                  className={`px-4 py-2 rounded-lg border ${
+                    timeOfDay === 'afternoon'
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  Après-midi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTimeOfDay('fullday')}
+                  className={`px-4 py-2 rounded-lg border ${
+                    timeOfDay === 'fullday'
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   Journée
                 </button>
               </div>
             </div>
 
-            {/* URL */}
             <div>
-              <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Lien vers l'activité
               </label>
               <input
                 type="url"
-                id="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
 
-            {/* Location */}
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Lieu
               </label>
               <input
                 type="text"
-                id="location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Adresse de l'activité"
               />
             </div>
 
-            {/* Prix */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Prix par personne
               </label>
-              <div className="grid grid-cols-2 gap-4 mb-3">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setPriceType('unique')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
+                  className={`px-4 py-2 rounded-lg border ${
                     priceType === 'unique'
-                      ? 'bg-gray-900 text-white border-gray-700'
-                      : 'bg-gray-100 text-gray-700 border-gray-200'
-                  } border`}
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   Prix unique
                 </button>
                 <button
                   type="button"
                   onClick={() => setPriceType('differentiated')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
+                  className={`px-4 py-2 rounded-lg border ${
                     priceType === 'differentiated'
-                      ? 'bg-gray-900 text-white border-gray-700'
-                      : 'bg-gray-100 text-gray-700 border-gray-200'
-                  } border`}
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   Prix différencié
                 </button>
@@ -206,64 +246,60 @@ export function CreateActivityModal({
 
               {priceType === 'unique' ? (
                 <div>
-                  <label htmlFor="uniquePrice" className="block text-xs text-gray-500">
+                  <label className="block text-xs text-gray-500">
                     Prix par personne
                   </label>
                   <input
                     type="number"
-                    id="uniquePrice"
                     value={uniquePrice}
                     onChange={(e) => setUniquePrice(e.target.value)}
                     min="0"
                     step="0.01"
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                     placeholder="0.00 €"
                   />
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="babyPrice" className="block text-xs text-gray-500">
+                    <label className="block text-xs text-gray-500">
                       Bébés
                     </label>
                     <input
                       type="number"
-                      id="babyPrice"
                       value={babyPrice}
                       onChange={(e) => setBabyPrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                       placeholder="0.00 €"
                     />
                   </div>
                   <div>
-                    <label htmlFor="childPrice" className="block text-xs text-gray-500">
+                    <label className="block text-xs text-gray-500">
                       Enfants
                     </label>
                     <input
                       type="number"
-                      id="childPrice"
                       value={childPrice}
                       onChange={(e) => setChildPrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                       placeholder="0.00 €"
                     />
                   </div>
                   <div>
-                    <label htmlFor="adultPrice" className="block text-xs text-gray-500">
+                    <label className="block text-xs text-gray-500">
                       Adultes
                     </label>
                     <input
                       type="number"
-                      id="adultPrice"
                       value={adultPrice}
                       onChange={(e) => setAdultPrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                       placeholder="0.00 €"
                     />
                   </div>
@@ -271,20 +307,20 @@ export function CreateActivityModal({
               )}
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="flex justify-end gap-3 mt-8">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
               >
-                {isSubmitting ? "Création..." : "Créer"}
+                {isSubmitting ? "En cours..." : "Ajouter"}
               </button>
             </div>
           </form>

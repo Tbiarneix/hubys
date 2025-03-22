@@ -35,7 +35,7 @@ model User {
   addedMenus           Menu[]              @relation("MenuCreator")
   ingredients          Ingredient[]
   todoItems             TodoItem[]
-  activityParticipants Activity[]          @relation("ActivityParticipants")
+  activityParticipants ActivityParticipant[]
 
   @@index([email])
 }
@@ -101,6 +101,9 @@ model Child {
   wishlists WishList[]
   memberOf  GroupMember[] @relation("GroupMemberChildren")
   parents   User[]        @relation("ParentChild")
+  activityParticipants ActivityParticipant[]
+
+  @@index([id])
 }
 
 model PartnerInvitation {
@@ -495,8 +498,27 @@ model Activity {
   updatedAt   DateTime        @updatedAt
   eventId     String
   event       Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  participants User[]         @relation("ActivityParticipants")
+  participants ActivityParticipant[]
 
   @@index([eventId])
   @@index([date])
+}
+
+model ActivityParticipant {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String?
+  childId    String?
+  isPresent  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child      Child?   @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@unique([activityId, childId])
+  @@index([activityId])
+  @@index([userId])
+  @@index([childId])
 }

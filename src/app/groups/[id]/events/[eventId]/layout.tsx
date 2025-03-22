@@ -31,6 +31,20 @@ export default async function EventLayout(props: EventLayoutProps) {
       id: params.eventId,
       groupId: params.id,
     },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      location: true,
+      hasRental: true,
+      hasCalendar: true,
+      hasMenus: true,
+      hasTodoList: true,
+      hasActivities: true,
+      hasPhotos: true,
+      hasAccounts: true,
+    }
   });
 
   if (!event) {

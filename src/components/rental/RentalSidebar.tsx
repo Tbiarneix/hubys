@@ -1,16 +1,16 @@
-import { Location, LocationSettings, Subgroup } from "@/types/location";
+import { Rental, RentalSettings, Subgroup } from "@/types/rental";
 
-interface LocationSidebarProps {
-  settings: LocationSettings;
-  onSettingsChange: (settings: LocationSettings) => void;
-  selectedLocation: Location | null;
+interface RentalSidebarProps {
+  settings: RentalSettings;
+  onSettingsChange: (settings: RentalSettings) => void;
+  selectedRental: Rental | null;
   subgroups: Subgroup[];
   eventId: string;
 }
 
-export function LocationSidebar({ settings, onSettingsChange, selectedLocation, subgroups, eventId }: LocationSidebarProps) {
+export function RentalSidebar({ settings, onSettingsChange, selectedRental, subgroups, eventId }: RentalSidebarProps) {
   const calculateSubgroupAmount = (subgroup: Subgroup) => {
-    if (!selectedLocation) return 0;
+    if (!selectedRental) return 0;
     
     const totalShares = 
       subgroup.adults.length * settings.adultShare +
@@ -20,10 +20,10 @@ export function LocationSidebar({ settings, onSettingsChange, selectedLocation, 
       sum + group.adults.length * settings.adultShare +
       group.children.length * settings.childShare, 0);
     
-    return (selectedLocation.amount * totalShares) / totalGroupShares;
+    return (selectedRental.amount * totalShares) / totalGroupShares;
   };
 
-  const handleSettingsChange = async (newSettings: LocationSettings) => {
+  const handleSettingsChange = async (newSettings: RentalSettings) => {
     try {
       const response = await fetch(`/api/events/${eventId}/settings`, {
         method: 'PATCH',
@@ -121,7 +121,7 @@ export function LocationSidebar({ settings, onSettingsChange, selectedLocation, 
                       )}
                     </div>
                     {/* Montant */}
-                    {selectedLocation && (
+                    {selectedRental && (
                       <div className="text-lg font-medium text-gray-900">
                         {amount.toFixed(0)} €
                       </div>

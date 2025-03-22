@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { useRouter } from 'next/navigation';
 
-interface AddLocationModalProps {
+interface AddRentalModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   eventId: string;
   groupId: string;
 }
 
-export function AddLocationModal({ isOpen, setIsOpen, eventId }: AddLocationModalProps) {
+export function AddRentalModal({ isOpen, setIsOpen, eventId }: AddRentalModalProps) {
   const [url, setUrl] = useState('');
   const [amount, setAmount] = useState('');
   const router = useRouter();
@@ -18,7 +18,7 @@ export function AddLocationModal({ isOpen, setIsOpen, eventId }: AddLocationModa
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/locations', {
+      const response = await fetch('/api/rentals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,14 +30,14 @@ export function AddLocationModal({ isOpen, setIsOpen, eventId }: AddLocationModa
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to add location');
+      if (!response.ok) throw new Error('Failed to add rental');
 
       setIsOpen(false);
       setUrl('');
       setAmount('');
       router.refresh();
     } catch (error) {
-      console.error('Error adding location:', error);
+      console.error('Error adding rental:', error);
     }
   };
 

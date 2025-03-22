@@ -1,4 +1,4 @@
-export interface Location {
+export interface Rental {
   id: string;
   eventId: string;
   url: string;
@@ -7,12 +7,12 @@ export interface Location {
   image: string;
   createdAt: Date;
   createdBy: string;
-  votes: LocationVote[];
+  votes: RentalVote[];
 }
 
-export interface LocationVote {
+export interface RentalVote {
   id: string;
-  locationId: string;
+  rentalId: string;
   userId: string;
   value: number; // 1 or -1
   createdAt: Date;
@@ -30,7 +30,7 @@ export interface Subgroup {
   }[];
 }
 
-export interface LocationSettings {
+export interface RentalSettings {
   adultShare: number;
   childShare: number;
 }

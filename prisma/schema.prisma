@@ -22,7 +22,7 @@ model User {
   partneredMembers     GroupMember[]       @relation("GroupMemberPartner")
   groupMemberships     GroupMember[]
   groupMessages        GroupMessage[]
-  locationVotes        LocationVote[]
+  rentalVotes          RentalVote[]
   sentInvitations      PartnerInvitation[] @relation("SentInvitations")
   receivedInvitations  PartnerInvitation[] @relation("ReceivedInvitations")
   recipes              Recipe[]
@@ -35,6 +35,7 @@ model User {
   addedMenus           Menu[]              @relation("MenuCreator")
   ingredients          Ingredient[]
   todoItems             TodoItem[]
+  activityParticipants ActivityParticipant[]
 
   @@index([email])
 }
@@ -100,6 +101,9 @@ model Child {
   wishlists WishList[]
   memberOf  GroupMember[] @relation("GroupMemberChildren")
   parents   User[]        @relation("ParentChild")
+  activityParticipants ActivityParticipant[]
+
+  @@index([id])
 }
 
 model PartnerInvitation {
@@ -141,11 +145,12 @@ model Event {
   id            String             @id @default(cuid())
   name          String
   groupId       String
+  location      String?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   startDate     DateTime
   endDate       DateTime
-  hasLocation   Boolean            @default(false)
+  hasRental     Boolean            @default(false)
   hasCalendar   Boolean            @default(false)
   hasMenus      Boolean            @default(false)
   hasTodoList   Boolean            @default(false)
@@ -155,17 +160,18 @@ model Event {
   adultShare    Float              @default(1)
   childShare    Float              @default(0.5)
   group         Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  locations     Location[]
+  rentals       Rental[]
   menus         Menu[]
   subgroups     Subgroup[]
   presences     SubgroupPresence[]
   shoppingList  ShoppingList?
   todoItems     TodoItem[]         @relation("EventTodoItems")
+  activities    Activity[]
 
   @@index([groupId])
 }
 
-model Location {
+model Rental {
   id        String         @id @default(cuid())
   eventId   String
   url       String
@@ -175,19 +181,19 @@ model Location {
   createdAt DateTime       @default(now())
   createdBy String
   event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  votes     LocationVote[]
+  votes     RentalVote[]
 }
 
-model LocationVote {
+model RentalVote {
   id         String   @id @default(cuid())
-  locationId String
+  rentalId  String
   userId     String
   value      Int      @default(0)
   createdAt  DateTime @default(now())
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  rental     Rental   @relation(fields: [rentalId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([locationId, userId])
+  @@unique([rentalId, userId])
 }
 
 model GroupMember {
@@ -470,4 +476,49 @@ enum RecipeCategory {
   SNACK
   DRINK
   OTHER
+}
+
+enum ActivityDuration {
+  HALF_DAY
+  FULL_DAY
+}
+
+model Activity {
+  id          String          @id @default(cuid())
+  title       String
+  duration    ActivityDuration
+  url         String?
+  location    String?
+  uniquePrice Float?
+  babyPrice   Float?
+  childPrice  Float?
+  adultPrice  Float?
+  date        DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  eventId     String
+  event       Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  participants ActivityParticipant[]
+
+  @@index([eventId])
+  @@index([date])
+}
+
+model ActivityParticipant {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String?
+  childId    String?
+  isPresent  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child      Child?   @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@unique([activityId, childId])
+  @@index([activityId])
+  @@index([userId])
+  @@index([childId])
 }

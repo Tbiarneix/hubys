@@ -2,14 +2,19 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { DeleteEventModal } from "./groups/DeleteEventModal";
+import { UpdateEventModal } from "./groups/UpdateEventModal";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface Event {
   id: string;
-  hasLocation: boolean;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  location?: string | null | undefined;
+  hasRental: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
   hasTodoList: boolean;
@@ -25,6 +30,7 @@ interface EventTabsProps {
 
 export default function EventTabs({ event, groupId }: EventTabsProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const pathname = usePathname() ?? '';
 
   const tabStyle = (isActive: boolean) =>
@@ -45,10 +51,10 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
         >
           Vue d'ensemble
         </Link>
-        {event.hasLocation && (
+        {event.hasRental && (
           <Link
-            href={`${basePath}/location`}
-            className={tabStyle(pathname.includes("/location"))}
+            href={`${basePath}/rental`}
+            className={tabStyle(pathname.includes("/rental"))}
           >
             Location
           </Link>
@@ -94,6 +100,12 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
           </Link>
         )}
         <div className="ml-auto">
+        <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+          >
+            <Edit className="w-5 h-5" />
+          </button>
           <button
             onClick={() => setIsDeleteModalOpen(true)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
@@ -108,6 +120,27 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
         onClose={() => setIsDeleteModalOpen(false)}
         eventId={event.id}
         groupId={groupId}
+      />
+      
+      <UpdateEventModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        eventId={event.id}
+        groupId={groupId}
+        initialData={{
+          name: event.name,
+          location: event.location || undefined,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          options: {
+            rental: event.hasRental,
+            menus: event.hasMenus,
+            shopping: event.hasTodoList,
+            activities: event.hasActivities,
+            photos: event.hasPhotos,
+            accounts: event.hasAccounts,
+          },
+        }}
       />
     </div>
   );

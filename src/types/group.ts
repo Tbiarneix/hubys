@@ -1,3 +1,5 @@
+import { Rental } from './rental';
+
 export interface GroupMember {
   id: string;
   userId: string;
@@ -184,7 +186,7 @@ export interface Event {
   groupId: string;
   startDate: string;
   endDate: string;
-  hasLocation: boolean;
+  hasRental: boolean;
   hasCalendar: boolean;
   hasMenus: boolean;
   hasShopping: boolean;
@@ -195,7 +197,7 @@ export interface Event {
   childShare: number;
   createdAt: string;
   updatedAt: string;
-  locations?: Location[];
+  rentals?: Rental[];
   subgroups?: Subgroup[];
   presences?: SubgroupPresence[];
   menus?: Menu[];

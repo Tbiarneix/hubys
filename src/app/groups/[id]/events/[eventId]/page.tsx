@@ -62,7 +62,8 @@ export default async function EventPage(props: EventPageProps) {
 
   return (
     <div className="mt-4 pb-20">
-      <p className="text-gray-600 mb-8">{startDate} - {endDate}</p>
+      <p className="text-gray-600">{startDate} - {endDate}</p>
+      <p className="text-gray-600 mb-8">{event.location}</p>
 
       <div className="bg-gray-50 rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-800">

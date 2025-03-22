@@ -3,33 +3,33 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface DeleteLocationModalProps {
+interface DeleteRentalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  locationId: string;
+  rentalId: string;
   title: string;
 }
 
-export function DeleteLocationModal({
+export function DeleteRentalModal({
   isOpen,
   onClose,
-  locationId,
+  rentalId,
   title,
-}: DeleteLocationModalProps) {
+}: DeleteRentalModalProps) {
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/locations/${locationId}`, {
+      const response = await fetch(`/api/rentals/${rentalId}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete location');
+        throw new Error('Failed to delete rental');
       }
 
       onClose();
-      toast.success('Location supprimée');
+      toast.success('Rental supprimée');
     } catch (error) {
-      console.error('Error deleting location:', error);
+      console.error('Error deleting rental:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

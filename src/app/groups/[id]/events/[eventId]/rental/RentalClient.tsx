@@ -1,34 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Location, LocationSettings, Subgroup } from "@/types/location";
+import { Rental, RentalSettings, Subgroup } from "@/types/rental";
 import { Plus } from "lucide-react";
-import { AddLocationModal } from "@/components/location/AddLocationModal";
-import { LocationCard } from "@/components/location/LocationCard";
-import { LocationSidebar } from "@/components/location/LocationSidebar";
+import { AddRentalModal } from "@/components/rental/AddRentalModal";
+import { RentalCard } from "@/components/rental/RentalCard";
+import { RentalSidebar } from "@/components/rental/RentalSidebar";
 
-interface LocationClientProps {
+interface RentalClientProps {
   initialData: {
-    locations: Location[];
+    rentals: Rental[];
     subgroups: Subgroup[];
-    settings: LocationSettings;
+    settings: RentalSettings;
   };
   eventId: string;
   groupId: string;
 }
 
-export default function LocationClient({ initialData, eventId, groupId }: LocationClientProps) {
-  const [locations, setLocations] = useState(initialData.locations);
+export default function RentalClient({ initialData, eventId, groupId }: RentalClientProps) {
+  const [rentals, setRentals] = useState(initialData.rentals);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [settings, setSettings] = useState<LocationSettings>(initialData.settings);
+  const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
+  const [settings, setSettings] = useState<RentalSettings>(initialData.settings);
 
   useEffect(() => {
-    setLocations(initialData.locations);
-  }, [initialData.locations]);
+    setRentals(initialData.rentals);
+  }, [initialData.rentals]);
 
-  // Sort locations by points
-  const sortedLocations = [...locations].sort((a, b) => {
+  // Sort rentals by points
+  const sortedRentals = [...rentals].sort((a, b) => {
     const pointsA = a.votes.reduce((sum, vote) => sum + vote.value, 0);
     const pointsB = b.votes.reduce((sum, vote) => sum + vote.value, 0);
     return pointsB - pointsA;
@@ -49,17 +49,17 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          {sortedLocations.map((location) => (
-            <LocationCard
-              key={location.id}
-              location={location}
-              onSelect={setSelectedLocation}
-              isSelected={selectedLocation?.id === location.id}
+          {sortedRentals.map((rental) => (
+            <RentalCard
+              key={rental.id}
+              rental={rental}
+              onSelect={setSelectedRental}
+              isSelected={selectedRental?.id === rental.id}
             />
           ))}
         </div>
 
-        <AddLocationModal
+        <AddRentalModal
           isOpen={isAddModalOpen}
           setIsOpen={setIsAddModalOpen}
           eventId={eventId}
@@ -67,10 +67,10 @@ export default function LocationClient({ initialData, eventId, groupId }: Locati
         />
       </div>
 
-      <LocationSidebar
+      <RentalSidebar
         settings={settings}
         onSettingsChange={setSettings}
-        selectedLocation={selectedLocation}
+        selectedRental={selectedRental}
         subgroups={initialData.subgroups}
         eventId={eventId}
       />

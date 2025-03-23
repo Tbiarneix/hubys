@@ -44,7 +44,7 @@ export default function EventTabs({ event, groupId }: EventTabsProps) {
 
   return (
     <div className="w-full">
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-2 flex gap-2 overflow-x-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t px-8 py-4 ml-64 flex gap-2 overflow-x-auto">
         <Link
           href={basePath}
           className={tabStyle(pathname === basePath)}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { luciole } from "@/font/custom-font";
 import "./globals.css";
 import { Providers } from "./providers";
+import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <Sidebar />
           <Header />
           <main>
             {children}

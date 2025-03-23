@@ -8,16 +8,9 @@ interface RegisterFormData {
   name: string;
   email: string;
   password: string;
-  isOpen: boolean;
-  onClose: () => void;
 }
 
-interface OpenModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function AuthForm({ isOpen, onClose }: OpenModalProps) {
+export default function AuthForm() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);

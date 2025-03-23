@@ -439,10 +439,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-[#f6f2ef] p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-black">Mon Profil</h1>
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center">
@@ -766,7 +766,7 @@ export default function ProfilePage() {
 
                               {/* Formulaire d'ajout d'enfant */}
                               {isAddChildFormVisible && (
-                                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200 shadow-md">
                                   <div className="flex justify-between items-center mb-4">
                                     <h4 className="text-sm font-medium text-gray-900">Ajouter un enfant</h4>
                                     <button
@@ -821,7 +821,7 @@ export default function ProfilePage() {
                                 </div>
                               )}
                               {editingChild && (
-                                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200 shadow-md">
                                   <div className="flex justify-between items-center mb-4">
                                     <h4 className="text-sm font-medium text-gray-900">Modifier l'enfant</h4>
                                     <button
@@ -995,7 +995,7 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <div className="mt-8 bg-white p-6 rounded-lg border border-gray-200 shadow-md">
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center">
@@ -1033,7 +1033,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <div className="mt-8 bg-white p-6 rounded-lg border border-gray-200 shadow-md">
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center">

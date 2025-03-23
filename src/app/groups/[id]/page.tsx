@@ -209,7 +209,7 @@ export default function GroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f6f2ef]">
       <div className="flex h-screen">
         {/* Main content */}
         <div className="flex-1 p-8 overflow-y-auto">

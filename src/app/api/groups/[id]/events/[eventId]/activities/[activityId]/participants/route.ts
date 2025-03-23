@@ -11,6 +11,42 @@ type Params = {
   }>;
 }
 
+type Participant = {
+  userId: string | null;
+  childId: string | null;
+  isPresent: boolean;
+}
+
+type Subgroup = {
+  id: string;
+  adults: string[];
+  children: string[];
+}
+
+type Adult = {
+  id: string;
+  name: string | null;
+}
+
+type Child = {
+  id: string;
+  firstName: string;
+}
+
+type ParticipantResponse = {
+  id: string;
+  adults: {
+    id: string;
+    name: string;
+    isPresent: boolean;
+  }[];
+  children: {
+    id: string;
+    name: string;
+    isPresent: boolean;
+  }[];
+}
+
 export async function GET(
   request: Request,
   context: Params
@@ -90,8 +126,8 @@ export async function GET(
       where: {
         id: {
           in: participants
-            .filter(p => p.userId !== null)
-            .map(p => p.userId as string)
+            .filter((p: Participant) => p.userId !== null)
+            .map((p: Participant) => p.userId as string)
         }
       },
       select: {
@@ -105,8 +141,8 @@ export async function GET(
       where: {
         id: {
           in: participants
-            .filter(p => p.childId !== null)
-            .map(p => p.childId as string)
+            .filter((p: Participant) => p.childId !== null)
+            .map((p: Participant) => p.childId as string)
         }
       },
       select: {
@@ -116,25 +152,25 @@ export async function GET(
     });
 
     // Organiser les participants par sous-groupe
-    const participantsBySubgroup = subgroups.map(subgroup => {
+    const participantsBySubgroup = subgroups.map((subgroup: Subgroup) => {
       // Trouver les adultes de ce sous-groupe qui sont participants
-      const subgroupAdults = adults.filter(adult => 
+      const subgroupAdults = adults.filter((adult: Adult) => 
         subgroup.adults.includes(adult.id) && 
-        participants.some(p => p.userId === adult.id)
-      ).map(adult => ({
+        participants.some((p: Participant) => p.userId === adult.id)
+      ).map((adult: Adult) => ({
         id: adult.id,
         name: adult.name || "Sans nom",
-        isPresent: participants.find(p => p.userId === adult.id)?.isPresent || false
+        isPresent: participants.find((p: Participant) => p.userId === adult.id)?.isPresent || false
       }));
 
       // Trouver les enfants de ce sous-groupe qui sont participants
-      const subgroupChildren = children.filter(child => 
+      const subgroupChildren = children.filter((child: Child) => 
         subgroup.children.includes(child.id) && 
-        participants.some(p => p.childId === child.id)
-      ).map(child => ({
+        participants.some((p: Participant) => p.childId === child.id)
+      ).map((child: Child) => ({
         id: child.id,
         name: child.firstName,
-        isPresent: participants.find(p => p.childId === child.id)?.isPresent || false
+        isPresent: participants.find((p: Participant) => p.childId === child.id)?.isPresent || false
       }));
 
       return {
@@ -142,7 +178,7 @@ export async function GET(
         adults: subgroupAdults,
         children: subgroupChildren
       };
-    }).filter(subgroup => subgroup.adults.length > 0 || subgroup.children.length > 0);
+    }).filter((subgroup: ParticipantResponse) => subgroup.adults.length > 0 || subgroup.children.length > 0);
 
     console.log("[PARTICIPANTS_GET] Sous-groupes avec participants:", participantsBySubgroup.length);
 

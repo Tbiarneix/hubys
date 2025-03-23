@@ -26,6 +26,7 @@ Créer un fichier `.env` à la racine du projet avec les variables suivantes :
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/Hubilys"
 JWT_SECRET="votre_secret_jwt"
+NEXTAUTH_SECRET="votre_secret_nextauth"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
